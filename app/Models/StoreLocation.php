@@ -34,7 +34,7 @@ final class StoreLocation extends BaseModel
         'store_id' => 'integer',
         'latitude' => 'float',
         'longitude' => 'float',
-        'coverage_radius' => 'float',
+        'coverage_radius' => 'integer',
         'is_main' => 'boolean',
         'is_active' => 'boolean',
         'created_at' => 'datetime',
