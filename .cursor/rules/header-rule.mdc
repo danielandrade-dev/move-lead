@@ -1,0 +1,44 @@
+---
+description: Regra de Padronização de Cabeçalho para Arquivos de Código
+globs:
+alwaysApply: false
+---
+Description:
+Regra para padronização de cabeçalhos em arquivos do projeto. Esta regra deve ser aplicada em todos os novos arquivos criados.
+
+Template do Cabeçalho:
+/**
+ * <NOME DO DOCUMENTO / ARQUIVO>
+ *
+ * Este arquivo faz parte do projeto Move Lead.
+ *
+ * @package     MoveLead
+ * @subpackage  <SUBPACKAGE>
+ * @category    <CATEGORY>
+ * @version     1.0.0
+ * @author      Daniel Moreira de Andrade
+ * @link        https://github.com/danielmoraes/move-lead
+ * @copyright   Copyright (c) 2025 AndradeTecnologia (http://www.andradetecnologia.com.br)
+ * @license     Proprietário
+ *
+ * Criado em:   <DATA_CRIACAO>
+ * Modificado:  <DATA_MODIFICACAO>
+ */
+
+Instruções de Uso:
+1. Substitua os placeholders entre <> pelos valores apropriados:
+   - <NOME DO DOCUMENTO / ARQUIVO>: Nome descritivo do arquivo
+   - <SUBPACKAGE>: Subpacote/módulo do sistema (ex: Auth, Settings, Models)
+   - <CATEGORY>: Categoria do arquivo (ex: Controller, Model, Middleware)
+   - <DATA_CRIACAO>: Data de criação no formato DD/MM/YYYY
+   - <DATA_MODIFICACAO>: Data da última modificação no formato DD/MM/YYYY
+
+2. Mantenha o cabeçalho atualizado:
+   - Atualize a versão quando houver mudanças significativas
+   - Mantenha a data de modificação atual
+   - Adicione novos autores se necessário
+
+3. Convenções:
+   - O cabeçalho deve estar no início do arquivo
+   - Mantenha uma linha em branco após o cabeçalho
+   - Use codificação UTF-8 para todos os arquivos
