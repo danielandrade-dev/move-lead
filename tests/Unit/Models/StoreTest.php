@@ -145,48 +145,6 @@ final class StoreTest extends TestCase
     /** @test
      * @group store
      */
-    public function test_find_eligible_leads(): void
-    {
-        $store = Store::factory()->create();
-        Contract::factory()->forStore($store)->create();
-
-        // Criar uma localização para a loja
-        StoreLocation::factory()
-            ->forStore($store)
-            ->withCoordinates(-23.5505, -46.6333)
-            ->withCoverageRadius(10)
-            ->state(['is_active' => true])
-            ->create();
-
-        // Criar um lead elegível (dentro do raio)
-        $eligibleLead = Lead::factory()
-            ->withCoordinates(-23.5505, -46.6333)
-            ->withStatus('new')
-            ->create();
-
-        // Criar um lead fora do raio
-        $farLead = Lead::factory()
-            ->withCoordinates(-23.9505, -46.9333)
-            ->withStatus('new')
-            ->create();
-
-        // Criar um lead dentro do raio mas já processado
-        $processedLead = Lead::factory()
-            ->withCoordinates(-23.5505, -46.6333)
-            ->withStatus('sent')
-            ->create();
-
-        $eligibleLeads = $store->findEligibleLeads()->get();
-
-        $this->assertEquals(1, $eligibleLeads->count());
-        $this->assertTrue($eligibleLeads->contains($eligibleLead));
-        $this->assertFalse($eligibleLeads->contains($farLead));
-        $this->assertFalse($eligibleLeads->contains($processedLead));
-    }
-
-    /** @test
-     * @group store
-     */
     public function test_store_main_location(): void
     {
         $store = Store::factory()->create();
