@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Traits\HasGeolocation;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,18 +13,32 @@ final class Store extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    use HasGeolocation;
 
+    /**
+     * Atributos que são permitidos para atribuição em massa
+     */
     protected $fillable = [
         'company_id',
         'name',
-        'document',
         'email',
         'phone',
-        'address',
+        'zip_code',
         'city',
         'state',
-        'zip_code',
+        'address',
         'is_active',
+    ];
+
+    /**
+     * Atributos que devem ser convertidos para tipos nativos
+     */
+    protected $casts = [
+        'company_id' => 'integer',
+        'is_active' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     public function locations()
@@ -43,12 +58,15 @@ final class Store extends Model
 
     public function contracts()
     {
-        return $this->morphMany(Contract::class, 'contractable');
+        return $this->hasMany(Contract::class);
     }
 
     public function activeContract()
     {
-        return $this->contracts()->where('is_active', true)->first();
+        return $this->contracts()
+            ->active()
+            ->latest()
+            ->first();
     }
 
     // Método para encontrar leads elegíveis considerando todos os pontos de captação
@@ -92,5 +110,35 @@ final class Store extends Model
             ->where('leads.status', 'new')
             ->groupBy('leads.id')
             ->orderBy('min_distance_in_km');
+    }
+
+    /**
+     * Retorna a localização principal da loja
+     */
+    public function mainLocation()
+    {
+        return $this->locations()
+            ->where('is_main', true)
+            ->first();
+    }
+
+    /**
+     * Verifica se a loja tem contrato ativo
+     */
+    public function hasActiveContract(): bool
+    {
+        return $this->contracts()
+            ->active()
+            ->exists();
+    }
+
+    /**
+     * Escopo para lojas com contrato ativo
+     */
+    public function scopeWithActiveContract($query)
+    {
+        return $query->whereHas('contracts', function ($query) {
+            $query->active();
+        });
     }
 }

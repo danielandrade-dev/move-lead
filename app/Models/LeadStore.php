@@ -6,4 +6,114 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-final class LeadStore extends Model {}
+final class LeadStore extends Model
+{
+    /**
+     * Atributos que são permitidos para atribuição em massa
+     */
+    protected $fillable = [
+        'lead_id',
+        'store_id',
+        'status',
+        'notes',
+        'is_active',
+    ];
+
+    /**
+     * Atributos que devem ser convertidos para tipos nativos
+     */
+    protected $casts = [
+        'lead_id' => 'integer',
+        'store_id' => 'integer',
+        'is_active' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
+    ];
+
+    /**
+     * Status possíveis para o lead
+     */
+    public const STATUS_NEW = 'new';
+    public const STATUS_CONTACTED = 'contacted';
+    public const STATUS_CONVERTED = 'converted';
+    public const STATUS_NOT_INTERESTED = 'not_interested';
+    public const STATUS_INVALID = 'invalid';
+
+    /**
+     * Lista de status possíveis
+     */
+    public static function getStatusList(): array
+    {
+        return [
+            self::STATUS_NEW => 'Novo',
+            self::STATUS_CONTACTED => 'Contatado',
+            self::STATUS_CONVERTED => 'Convertido',
+            self::STATUS_NOT_INTERESTED => 'Não Interessado',
+            self::STATUS_INVALID => 'Inválido',
+        ];
+    }
+
+    /**
+     * Relacionamento com o lead
+     */
+    public function lead()
+    {
+        return $this->belongsTo(Lead::class);
+    }
+
+    /**
+     * Relacionamento com a loja
+     */
+    public function store()
+    {
+        return $this->belongsTo(Store::class);
+    }
+
+    /**
+     * Escopo para leads com determinado status
+     */
+    public function scopeWithStatus($query, string $status)
+    {
+        return $query->where('status', $status);
+    }
+
+    /**
+     * Escopo para leads convertidos
+     */
+    public function scopeConverted($query)
+    {
+        return $query->where('status', self::STATUS_CONVERTED);
+    }
+
+    /**
+     * Escopo para leads não convertidos
+     */
+    public function scopeNotConverted($query)
+    {
+        return $query->where('status', '!=', self::STATUS_CONVERTED);
+    }
+
+    /**
+     * Verifica se o lead foi convertido
+     */
+    public function isConverted(): bool
+    {
+        return $this->status === self::STATUS_CONVERTED;
+    }
+
+    /**
+     * Atualiza o status do lead
+     */
+    public function updateStatus(string $status, ?string $notes = null): void
+    {
+        if (!array_key_exists($status, self::getStatusList())) {
+            throw new \InvalidArgumentException('Status inválido');
+        }
+
+        $this->update([
+            'status' => $status,
+            'notes' => $notes,
+        ]);
+    }
+}

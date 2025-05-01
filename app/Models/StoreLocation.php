@@ -4,66 +4,73 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use Exception;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Traits\HasGeolocation;
 
-final class StoreLocation extends Model
+final class StoreLocation extends BaseModel
 {
-    use HasFactory;
-    use SoftDeletes;
+    use HasGeolocation;
 
+    /**
+     * Atributos que são permitidos para atribuição em massa
+     */
     protected $fillable = [
         'store_id',
         'name',
-        'address',
+        'zip_code',
         'city',
         'state',
-        'zip_code',
+        'address',
         'latitude',
         'longitude',
         'coverage_radius',
+        'is_main',
         'is_active',
     ];
 
+    /**
+     * Atributos que devem ser convertidos para tipos nativos
+     */
+    protected $casts = [
+        'store_id' => 'integer',
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'coverage_radius' => 'float',
+        'is_main' => 'boolean',
+        'is_active' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
+    ];
+
+    /**
+     * Relacionamento com a loja
+     */
     public function store()
     {
         return $this->belongsTo(Store::class);
     }
 
-    // Método para encontrar leads dentro do raio de cobertura deste ponto
-    public function findLeadsInRange()
+    /**
+     * Verifica se o endereço está dentro do raio de cobertura
+     */
+    public function isAddressInCoverage(float $latitude, float $longitude): bool
     {
-        return Lead::select('*')
-            ->selectRaw('
-                ST_Distance_Sphere(
-                    point(longitude, latitude),
-                    point(?, ?)
-                ) * 0.001 as distance_in_km
-            ', [$this->longitude, $this->latitude])
-            ->havingRaw('distance_in_km <= ?', [$this->coverage_radius])
-            ->whereNotIn('id', function ($query): void {
-                $query->select('lead_id')
-                    ->from('lead_stores')
-                    ->whereIn('store_id', function ($q): void {
-                        // Excluir lojas da mesma empresa
-                        $q->select('id')
-                            ->from('stores')
-                            ->where('company_id', $this->store->company_id);
-                    });
-            })
-            ->where('status', 'new')
-            ->orderBy('distance_in_km');
+        return $this->getDistanceTo($latitude, $longitude) <= $this->coverage_radius;
     }
 
+    /**
+     * Boot function from Laravel
+     */
     protected static function boot(): void
     {
         parent::boot();
 
+        // Garante que só existe uma localização principal por loja
         static::saving(function ($location): void {
-            if ($location->coverage_radius < 10) {
-                throw new Exception('O raio de cobertura mínimo é de 10km');
+            if ($location->is_main) {
+                static::where('store_id', $location->store_id)
+                    ->where('id', '!=', $location->id)
+                    ->update(['is_main' => false]);
             }
         });
     }

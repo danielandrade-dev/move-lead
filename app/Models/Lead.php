@@ -4,17 +4,22 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Traits\HasGeolocation;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
-final class Lead extends Model
+final class Lead extends BaseModel
 {
-    use HasFactory;
-    use SoftDeletes;
+    use HasGeolocation;
 
+    /**
+     * Período padrão de restrição em meses
+     */
+    protected static int $restrictionPeriodMonths = 3;
+
+    /**
+     * Atributos que são permitidos para atribuição em massa
+     */
     protected $fillable = [
         'segment_id',
         'name',
@@ -27,12 +32,25 @@ final class Lead extends Model
         'latitude',
         'longitude',
         'status',
+        'is_active',
     ];
 
-    // Período padrão de restrição em meses
-    protected static int $restrictionPeriodMonths = 3;
+    /**
+     * Atributos que devem ser convertidos para tipos nativos
+     */
+    protected $casts = [
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'segment_id' => 'integer',
+        'is_active' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
+    ];
 
-    // Método para alterar o período de restrição
+    /**
+     * Define o período de restrição
+     */
     public static function setRestrictionPeriod(int $months): void
     {
         if ($months < 1) {
@@ -41,18 +59,25 @@ final class Lead extends Model
         self::$restrictionPeriodMonths = $months;
     }
 
-    // Getter para o período de restrição
+    /**
+     * Retorna o período de restrição atual
+     */
     public static function getRestrictionPeriod(): int
     {
         return self::$restrictionPeriodMonths;
     }
 
+    /**
+     * Relacionamento com os telefones do lead
+     */
     public function phones()
     {
         return $this->hasMany(LeadPhone::class);
     }
 
-    // Encontrar lojas elegíveis considerando restrição de telefone
+    /**
+     * Encontra lojas elegíveis considerando restrição de telefone
+     */
     public function findEligibleStores()
     {
         $normalizedPhones = $this->phones->pluck('phone_normalized');
@@ -67,18 +92,14 @@ final class Lead extends Model
                     ) * 0.001
                 ) as min_distance_in_km
             ', [$this->longitude, $this->latitude])
-            ->whereRaw('
-                ST_Distance_Sphere(
-                    point(store_locations.longitude, store_locations.latitude),
-                    point(?, ?)
-                ) * 0.001 <= store_locations.coverage_radius
-            ', [$this->longitude, $this->latitude])
+            ->withinRadius($this->latitude, $this->longitude, DB::raw('store_locations.coverage_radius'))
             ->whereHas('contracts', function ($query): void {
-                $query->where('is_active', true);
+                $query->active();
             })
-            ->where('stores.is_active', true)
-            ->where('store_locations.is_active', true)
-            // Excluir lojas que já receberam leads com os mesmos telefones no período
+            ->active()
+            ->whereHas('locations', function ($query): void {
+                $query->active();
+            })
             ->whereNotExists(function ($query) use ($normalizedPhones): void {
                 $query->select(DB::raw(1))
                     ->from('lead_stores')
@@ -92,41 +113,49 @@ final class Lead extends Model
             ->orderBy('min_distance_in_km');
     }
 
-    // Verificar se um telefone já foi enviado para uma loja no período
+    /**
+     * Verifica se um lead já foi enviado para uma loja no período
+     */
     public function hasBeenSentToStore(Store $store): bool
     {
-        $normalizedPhones = $this->phones->pluck('phone_normalized');
-
-        return LeadStore::query()
+        return $this->checkLeadRestriction()
             ->where('store_id', $store->id)
-            ->whereHas('lead.phones', function ($query) use ($normalizedPhones): void {
-                $query->whereIn('phone_normalized', $normalizedPhones);
-            })
-            ->where('created_at', '>=', now()->subMonths(self::$restrictionPeriodMonths))
             ->exists();
     }
 
-    // Verificar se um telefone já foi enviado para uma empresa no período
+    /**
+     * Verifica se um lead já foi enviado para uma empresa no período
+     */
     public function hasBeenSentToCompany(Company $company): bool
     {
-        $normalizedPhones = $this->phones->pluck('phone_normalized');
-
-        return LeadStore::query()
+        return $this->checkLeadRestriction()
             ->whereHas('store', function ($query) use ($company): void {
                 $query->where('company_id', $company->id);
             })
-            ->whereHas('lead.phones', function ($query) use ($normalizedPhones): void {
-                $query->whereIn('phone_normalized', $normalizedPhones);
-            })
-            ->where('created_at', '>=', now()->subMonths(self::$restrictionPeriodMonths))
             ->exists();
     }
 
+    /**
+     * Query base para verificar restrições de lead
+     */
+    private function checkLeadRestriction()
+    {
+        $normalizedPhones = $this->phones->pluck('phone_normalized');
+
+        return LeadStore::query()
+            ->whereHas('lead.phones', function ($query) use ($normalizedPhones): void {
+                $query->whereIn('phone_normalized', $normalizedPhones);
+            })
+            ->where('created_at', '>=', now()->subMonths(self::$restrictionPeriodMonths));
+    }
+
+    /**
+     * Boot function from Laravel
+     */
     protected static function boot(): void
     {
         parent::boot();
 
-        // Ao criar um lead, normaliza e salva o telefone
         static::created(function ($lead): void {
             $lead->phones()->create([
                 'phone_normalized' => LeadPhone::normalizePhone($lead->phone),
