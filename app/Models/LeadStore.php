@@ -39,6 +39,11 @@ final class LeadStore extends Model
     public const STATUS_CONVERTED = 'converted';
     public const STATUS_NOT_INTERESTED = 'not_interested';
     public const STATUS_INVALID = 'invalid';
+    public const STATUS_WARRANTY_PENDING = 'warranty_pending';
+    public const STATUS_WARRANTY_APPROVED = 'warranty_approved';
+    public const STATUS_WARRANTY_REJECTED = 'warranty_rejected';
+    public const STATUS_WARRANTY_WAITING_REPLACEMENT = 'warranty_waiting_replacement';
+    public const STATUS_WARRANTY_REPLACED = 'warranty_replaced';
 
     /**
      * Lista de status possíveis
@@ -51,6 +56,11 @@ final class LeadStore extends Model
             self::STATUS_CONVERTED => 'Convertido',
             self::STATUS_NOT_INTERESTED => 'Não Interessado',
             self::STATUS_INVALID => 'Inválido',
+            self::STATUS_WARRANTY_PENDING => 'Garantia Pendente',
+            self::STATUS_WARRANTY_APPROVED => 'Garantia Aprovada',
+            self::STATUS_WARRANTY_REJECTED => 'Garantia Rejeitada',
+            self::STATUS_WARRANTY_WAITING_REPLACEMENT => 'Garantia Aguardando Substituição',
+            self::STATUS_WARRANTY_REPLACED => 'Garantia Substituída',
         ];
     }
 
@@ -116,4 +126,5 @@ final class LeadStore extends Model
             'notes' => $notes,
         ]);
     }
+
 }
