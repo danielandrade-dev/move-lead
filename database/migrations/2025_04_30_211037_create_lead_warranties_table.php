@@ -1,3 +1,21 @@
+/**
+ * Migration para Criação da Tabela de Garantias de Leads
+ *
+ * Este arquivo faz parte do projeto Move Lead.
+ *
+ * @package     MoveLead
+ * @subpackage  Database
+ * @category    Migration
+ * @version     1.0.0
+ * @author      Daniel Moreira de Andrade
+ * @link        https://github.com/danielmoraes/move-lead
+ * @copyright   Copyright (c) 2025 AndradeTecnologia (http://www.andradetecnologia.com.br)
+ * @license     Proprietário
+ *
+ * Criado em:   30/04/2025
+ * Modificado:  30/04/2025
+ */
+
 <?php
 
 use Illuminate\Database\Eloquent\SoftDeletingScope;
