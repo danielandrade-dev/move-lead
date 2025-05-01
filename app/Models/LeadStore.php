@@ -5,9 +5,23 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
 
 final class LeadStore extends Model
 {
+    /**
+     * Status possíveis para o lead
+     */
+    public const STATUS_NEW = 'new';
+    public const STATUS_CONTACTED = 'contacted';
+    public const STATUS_CONVERTED = 'converted';
+    public const STATUS_NOT_INTERESTED = 'not_interested';
+    public const STATUS_INVALID = 'invalid';
+    public const STATUS_WARRANTY_PENDING = 'warranty_pending';
+    public const STATUS_WARRANTY_APPROVED = 'warranty_approved';
+    public const STATUS_WARRANTY_REJECTED = 'warranty_rejected';
+    public const STATUS_WARRANTY_WAITING_REPLACEMENT = 'warranty_waiting_replacement';
+    public const STATUS_WARRANTY_REPLACED = 'warranty_replaced';
     /**
      * Atributos que são permitidos para atribuição em massa
      */
@@ -30,20 +44,6 @@ final class LeadStore extends Model
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
-
-    /**
-     * Status possíveis para o lead
-     */
-    public const STATUS_NEW = 'new';
-    public const STATUS_CONTACTED = 'contacted';
-    public const STATUS_CONVERTED = 'converted';
-    public const STATUS_NOT_INTERESTED = 'not_interested';
-    public const STATUS_INVALID = 'invalid';
-    public const STATUS_WARRANTY_PENDING = 'warranty_pending';
-    public const STATUS_WARRANTY_APPROVED = 'warranty_approved';
-    public const STATUS_WARRANTY_REJECTED = 'warranty_rejected';
-    public const STATUS_WARRANTY_WAITING_REPLACEMENT = 'warranty_waiting_replacement';
-    public const STATUS_WARRANTY_REPLACED = 'warranty_replaced';
 
     /**
      * Lista de status possíveis
@@ -109,7 +109,7 @@ final class LeadStore extends Model
      */
     public function isConverted(): bool
     {
-        return $this->status === self::STATUS_CONVERTED;
+        return self::STATUS_CONVERTED === $this->status;
     }
 
     /**
@@ -117,8 +117,8 @@ final class LeadStore extends Model
      */
     public function updateStatus(string $status, ?string $notes = null): void
     {
-        if (!array_key_exists($status, self::getStatusList())) {
-            throw new \InvalidArgumentException('Status inválido');
+        if ( ! array_key_exists($status, self::getStatusList())) {
+            throw new InvalidArgumentException('Status inválido');
         }
 
         $this->update([

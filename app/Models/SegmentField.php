@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
 
 final class SegmentField extends Model
 {
@@ -74,7 +75,7 @@ final class SegmentField extends Model
      */
     public function isSelectType(): bool
     {
-        return $this->type === self::TYPE_SELECT;
+        return self::TYPE_SELECT === $this->type;
     }
 
     /**
@@ -103,11 +104,11 @@ final class SegmentField extends Model
         static::saving(function ($field): void {
             // Garante que campos do tipo select tenham opções
             if ($field->isSelectType() && empty($field->options)) {
-                throw new \InvalidArgumentException('Campos do tipo seleção devem ter opções definidas');
+                throw new InvalidArgumentException('Campos do tipo seleção devem ter opções definidas');
             }
 
             // Define a ordem padrão se não informada
-            if (!isset($field->order)) {
+            if ( ! isset($field->order)) {
                 $field->order = static::where('segment_id', $field->segment_id)->max('order') + 1;
             }
         });

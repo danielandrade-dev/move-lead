@@ -6,9 +6,9 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Laravel\Sanctum\HasApiTokens;
 
 final class User extends Authenticatable
@@ -98,7 +98,7 @@ final class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->type === self::TYPE_ADMIN;
+        return self::TYPE_ADMIN === $this->type;
     }
 
     /**
@@ -106,7 +106,7 @@ final class User extends Authenticatable
      */
     public function isManager(): bool
     {
-        return $this->type === self::TYPE_MANAGER;
+        return self::TYPE_MANAGER === $this->type;
     }
 
     /**
@@ -114,7 +114,7 @@ final class User extends Authenticatable
      */
     public function isStoreUser(): bool
     {
-        return $this->type === self::TYPE_STORE;
+        return self::TYPE_STORE === $this->type;
     }
 
     /**
@@ -122,7 +122,7 @@ final class User extends Authenticatable
      */
     public function isAnalyst(): bool
     {
-        return $this->type === self::TYPE_ANALYST;
+        return self::TYPE_ANALYST === $this->type;
     }
 
     /**
@@ -149,7 +149,7 @@ final class User extends Authenticatable
         parent::boot();
 
         static::creating(function ($user): void {
-            if (!isset($user->is_active)) {
+            if ( ! isset($user->is_active)) {
                 $user->is_active = true;
             }
         });

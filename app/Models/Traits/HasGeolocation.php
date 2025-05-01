@@ -40,12 +40,13 @@ trait HasGeolocation
      */
     public function scopeOrderByDistance(Builder $query, float $latitude, float $longitude, string $direction = 'asc'): Builder
     {
-        return $query->orderByRaw('
+        return $query->orderByRaw(
+            '
             ST_Distance_Sphere(
                 point(longitude, latitude),
                 point(?, ?)
             ) * 0.001 ' . $direction,
-            [$longitude, $latitude]
+            [$longitude, $latitude],
         );
     }
 

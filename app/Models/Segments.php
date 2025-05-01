@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use RuntimeException;
 
 final class Segments extends Model
 {
@@ -69,7 +70,7 @@ final class Segments extends Model
         // Impede a exclusão de segmentos com leads associados
         static::deleting(function ($segment): void {
             if ($segment->hasLeads()) {
-                throw new \RuntimeException('Não é possível excluir um segmento que possui leads associados');
+                throw new RuntimeException('Não é possível excluir um segmento que possui leads associados');
             }
         });
     }

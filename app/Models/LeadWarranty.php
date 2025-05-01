@@ -94,7 +94,7 @@ final class LeadWarranty extends BaseModel
         DB::transaction(function () use ($analyst, $notes): void {
             $contract = $this->leadStore->contract;
 
-            if (!$contract->hasReachedWarrantyLimit()) {
+            if ( ! $contract->hasReachedWarrantyLimit()) {
                 $this->update([
                     'status' => self::STATUS_WAITING_REPLACEMENT,
                     'analysis_notes' => $notes,
@@ -150,7 +150,7 @@ final class LeadWarranty extends BaseModel
      */
     public function isPending(): bool
     {
-        return $this->status === self::STATUS_PENDING;
+        return self::STATUS_PENDING === $this->status;
     }
 
     /**
@@ -166,7 +166,7 @@ final class LeadWarranty extends BaseModel
      */
     public function isRejected(): bool
     {
-        return $this->status === self::STATUS_REJECTED;
+        return self::STATUS_REJECTED === $this->status;
     }
 
     /**
@@ -174,7 +174,7 @@ final class LeadWarranty extends BaseModel
      */
     public function isReplaced(): bool
     {
-        return $this->status === self::STATUS_REPLACED;
+        return self::STATUS_REPLACED === $this->status;
     }
 
     /**

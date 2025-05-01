@@ -39,21 +39,16 @@ final class LeadPhone extends Model
         $normalized = preg_replace('/[^0-9]/', '', $phone);
 
         // Remove o código do país se existir (assumindo Brasil - 55)
-        if (str_starts_with($normalized, '55') && strlen($normalized) > 11) {
-            $normalized = substr($normalized, 2);
+        if (str_starts_with($normalized, '55') && mb_strlen($normalized) > 11) {
+            $normalized = mb_substr($normalized, 2);
         }
 
         // Remove o 9 inicial de celulares se o número tiver mais de 9 dígitos
-        if (strlen($normalized) > 9 && str_starts_with($normalized, '9')) {
-            $normalized = substr($normalized, 1);
+        if (mb_strlen($normalized) > 9 && str_starts_with($normalized, '9')) {
+            $normalized = mb_substr($normalized, 1);
         }
 
         return $normalized;
-    }
-
-    public function lead()
-    {
-        return $this->belongsTo(Lead::class);
     }
 
     /**
@@ -62,6 +57,11 @@ final class LeadPhone extends Model
     public static function areEquivalent(string $phone1, string $phone2): bool
     {
         return self::normalizePhone($phone1) === self::normalizePhone($phone2);
+    }
+
+    public function lead()
+    {
+        return $this->belongsTo(Lead::class);
     }
 
     /**

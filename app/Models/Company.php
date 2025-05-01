@@ -85,7 +85,7 @@ final class Company extends Model
      */
     public function scopeWithActiveContract($query)
     {
-        return $query->whereHas('contracts', function ($query) {
+        return $query->whereHas('contracts', function ($query): void {
             $query->active();
         });
     }

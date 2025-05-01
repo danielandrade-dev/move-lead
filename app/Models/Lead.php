@@ -136,20 +136,6 @@ final class Lead extends BaseModel
     }
 
     /**
-     * Query base para verificar restrições de lead
-     */
-    private function checkLeadRestriction()
-    {
-        $normalizedPhones = $this->phones->pluck('phone_normalized');
-
-        return LeadStore::query()
-            ->whereHas('lead.phones', function ($query) use ($normalizedPhones): void {
-                $query->whereIn('phone_normalized', $normalizedPhones);
-            })
-            ->where('created_at', '>=', now()->subMonths(self::$restrictionPeriodMonths));
-    }
-
-    /**
      * Boot function from Laravel
      */
     protected static function boot(): void
@@ -162,5 +148,19 @@ final class Lead extends BaseModel
                 'phone_original' => $lead->phone,
             ]);
         });
+    }
+
+    /**
+     * Query base para verificar restrições de lead
+     */
+    private function checkLeadRestriction()
+    {
+        $normalizedPhones = $this->phones->pluck('phone_normalized');
+
+        return LeadStore::query()
+            ->whereHas('lead.phones', function ($query) use ($normalizedPhones): void {
+                $query->whereIn('phone_normalized', $normalizedPhones);
+            })
+            ->where('created_at', '>=', now()->subMonths(self::$restrictionPeriodMonths));
     }
 }

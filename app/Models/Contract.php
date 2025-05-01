@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 use InvalidArgumentException;
 
 final class Contract extends Model
@@ -182,7 +182,7 @@ final class Contract extends Model
      */
     public function isWithinPeriod(?Carbon $date = null): bool
     {
-        $date = $date ?? now();
+        $date ??= now();
         return $date->between($this->start_date, $this->end_date);
     }
 
@@ -191,7 +191,7 @@ final class Contract extends Model
      */
     public function isExpired(?Carbon $date = null): bool
     {
-        $date = $date ?? now();
+        $date ??= now();
         return $date->isAfter($this->end_date);
     }
 
@@ -200,7 +200,7 @@ final class Contract extends Model
      */
     public function hasNotStarted(?Carbon $date = null): bool
     {
-        $date = $date ?? now();
+        $date ??= now();
         return $date->isBefore($this->start_date);
     }
 
@@ -228,13 +228,13 @@ final class Contract extends Model
      */
     public function hasReachedLeadsLimit(): bool
     {
-        if (!$this->leads_limit) {
+        if ( ! $this->leads_limit) {
             return false;
         }
 
         return $this->getLeadsCount(
             $this->start_date->startOfDay(),
-            $this->end_date->endOfDay()
+            $this->end_date->endOfDay(),
         ) >= $this->leads_limit;
     }
 
@@ -256,11 +256,11 @@ final class Contract extends Model
                 throw new InvalidArgumentException('A data de início deve ser anterior à data de término');
             }
 
-            if ($contract->leads_limit !== null && $contract->leads_limit < 1) {
+            if (null !== $contract->leads_limit && $contract->leads_limit < 1) {
                 throw new InvalidArgumentException('O limite de leads deve ser maior que zero');
             }
 
-            if ($contract->leads_price !== null && $contract->leads_price < 0) {
+            if (null !== $contract->leads_price && $contract->leads_price < 0) {
                 throw new InvalidArgumentException('O preço dos leads não pode ser negativo');
             }
         });

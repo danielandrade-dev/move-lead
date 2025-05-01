@@ -12,8 +12,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 final class Store extends Model
 {
     use HasFactory;
-    use SoftDeletes;
     use HasGeolocation;
+    use SoftDeletes;
 
     /**
      * Atributos que são permitidos para atribuição em massa
@@ -137,7 +137,7 @@ final class Store extends Model
      */
     public function scopeWithActiveContract($query)
     {
-        return $query->whereHas('contracts', function ($query) {
+        return $query->whereHas('contracts', function ($query): void {
             $query->active();
         });
     }

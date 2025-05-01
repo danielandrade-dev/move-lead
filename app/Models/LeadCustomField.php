@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
 
 final class LeadCustomField extends Model
 {
@@ -78,7 +79,7 @@ final class LeadCustomField extends Model
         // Valida de acordo com o tipo
         return match ($field->type) {
             SegmentField::TYPE_NUMBER => is_numeric($this->value),
-            SegmentField::TYPE_DATE => strtotime($this->value) !== false,
+            SegmentField::TYPE_DATE => false !== strtotime($this->value),
             SegmentField::TYPE_SELECT => in_array($this->value, $field->options ?? []),
             SegmentField::TYPE_BOOLEAN => is_bool($this->value) || in_array($this->value, [0, 1, '0', '1']),
             default => true,
@@ -93,9 +94,9 @@ final class LeadCustomField extends Model
         parent::boot();
 
         static::saving(function ($customField): void {
-            if (!$customField->validateValue()) {
-                throw new \InvalidArgumentException(
-                    'O valor fornecido é inválido para o tipo de campo'
+            if ( ! $customField->validateValue()) {
+                throw new InvalidArgumentException(
+                    'O valor fornecido é inválido para o tipo de campo',
                 );
             }
         });

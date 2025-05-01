@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Traits\HasCommonAttributes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 abstract class BaseModel extends Model
 {
+    use HasCommonAttributes;
     use HasFactory;
     use SoftDeletes;
-    use HasCommonAttributes;
 
     /**
      * Indica se o model deve usar timestamps
@@ -46,7 +46,7 @@ abstract class BaseModel extends Model
 
         // Garante que registros criados são ativos por padrão
         static::creating(function ($model): void {
-            if (!isset($model->is_active)) {
+            if ( ! isset($model->is_active)) {
                 $model->is_active = true;
             }
         });
