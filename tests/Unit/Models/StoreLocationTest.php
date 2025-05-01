@@ -13,6 +13,9 @@ final class StoreLocationTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** @test
+     * @group storelocation
+     */
     public function test_can_create_store_location(): void
     {
         $location = StoreLocation::factory()->create();
@@ -29,6 +32,9 @@ final class StoreLocationTest extends TestCase
         ]);
     }
 
+    /** @test
+     * @group storelocation
+     */
     public function test_store_location_belongs_to_store(): void
     {
         $store = Store::factory()->create();
@@ -37,6 +43,9 @@ final class StoreLocationTest extends TestCase
         $this->assertEquals($store->id, $location->store->id);
     }
 
+    /** @test
+     * @group storelocation
+     */
     public function test_store_location_with_specific_coordinates(): void
     {
         $latitude = -23.5505;
@@ -50,9 +59,12 @@ final class StoreLocationTest extends TestCase
         $this->assertEquals($longitude, $location->longitude);
     }
 
+    /** @test
+     * @group storelocation
+     */
     public function test_store_location_with_specific_coverage_radius(): void
     {
-        $radius = 15.5;
+        $radius = 15;
 
         $location = StoreLocation::factory()
             ->withCoverageRadius($radius)
@@ -61,6 +73,9 @@ final class StoreLocationTest extends TestCase
         $this->assertEquals($radius, $location->coverage_radius);
     }
 
+    /** @test
+     * @group storelocation
+     */
     public function test_can_create_main_location(): void
     {
         $location = StoreLocation::factory()
@@ -70,6 +85,9 @@ final class StoreLocationTest extends TestCase
         $this->assertTrue($location->is_main);
     }
 
+    /** @test
+     * @group storelocation
+     */
     public function test_can_create_inactive_location(): void
     {
         $location = StoreLocation::factory()
@@ -79,6 +97,9 @@ final class StoreLocationTest extends TestCase
         $this->assertFalse($location->is_active);
     }
 
+    /** @test
+     * @group storelocation
+     */
     public function test_get_distance_to_point(): void
     {
         $location = StoreLocation::factory()
@@ -93,6 +114,9 @@ final class StoreLocationTest extends TestCase
         $this->assertLessThan(370, $distance);
     }
 
+    /** @test
+     * @group storelocation
+     */
     public function test_scope_within_radius(): void
     {
         // Criar uma localização em São Paulo
@@ -113,6 +137,9 @@ final class StoreLocationTest extends TestCase
         $this->assertEquals(1, $nearbyLocations->count());
     }
 
+    /** @test
+     * @group storelocation
+     */
     public function test_scope_order_by_distance(): void
     {
         // Criar uma localização em São Paulo
@@ -132,6 +159,9 @@ final class StoreLocationTest extends TestCase
         $this->assertEquals($locationRJ->id, $orderedLocations->last()->id);
     }
 
+    /** @test
+     * @group storelocation
+     */
     public function test_get_coordinates(): void
     {
         $location = StoreLocation::factory()

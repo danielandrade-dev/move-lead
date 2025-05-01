@@ -13,6 +13,9 @@ final class SegmentsTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** @test
+     * @group segment
+     */
     public function test_can_create_segment(): void
     {
         $segment = Segments::factory()->create();
@@ -20,11 +23,15 @@ final class SegmentsTest extends TestCase
         $this->assertDatabaseHas('segments', [
             'id' => $segment->id,
             'name' => $segment->name,
+            'slug' => $segment->slug,
             'description' => $segment->description,
             'is_active' => true,
         ]);
     }
 
+    /** @test
+     * @group segment
+     */
     public function test_segment_has_leads(): void
     {
         $segment = Segments::factory()->create();
@@ -34,6 +41,9 @@ final class SegmentsTest extends TestCase
         $this->assertEquals(1, $segment->leads->count());
     }
 
+    /** @test
+     * @group segment
+     */
     public function test_can_create_inactive_segment(): void
     {
         $segment = Segments::factory()->inactive()->create();
@@ -44,6 +54,9 @@ final class SegmentsTest extends TestCase
         ]);
     }
 
+    /** @test
+     * @group segment
+     */
     public function test_scope_active(): void
     {
         // Criar um segmento ativo
@@ -58,6 +71,9 @@ final class SegmentsTest extends TestCase
         $this->assertTrue($activeSegments->contains($activeSegment));
     }
 
+    /** @test
+     * @group segment
+     */
     public function test_scope_inactive(): void
     {
         // Criar um segmento ativo
@@ -70,5 +86,32 @@ final class SegmentsTest extends TestCase
 
         $this->assertEquals(1, $inactiveSegments->count());
         $this->assertTrue($inactiveSegments->contains($inactiveSegment));
+    }
+
+    /** @test
+     * @group segment
+     */
+    public function test_generates_slug_automatically(): void
+    {
+        $segment = Segments::create([
+            'name' => 'Test Segment Name',
+            'description' => 'Test description',
+        ]);
+
+        $this->assertEquals('test-segment-name', $segment->slug);
+    }
+
+    /** @test
+     * @group segment
+     */
+    public function test_keeps_custom_slug_when_provided(): void
+    {
+        $segment = Segments::create([
+            'name' => 'Test Segment',
+            'slug' => 'custom-slug',
+            'description' => 'Test description',
+        ]);
+
+        $this->assertEquals('custom-slug', $segment->slug);
     }
 }

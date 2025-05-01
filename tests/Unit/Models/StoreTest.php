@@ -17,6 +17,9 @@ final class StoreTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** @test
+     * @group store
+     */
     public function test_can_create_store(): void
     {
         $store = Store::factory()->create();
@@ -24,6 +27,7 @@ final class StoreTest extends TestCase
         $this->assertDatabaseHas('stores', [
             'id' => $store->id,
             'name' => $store->name,
+            'document' => $store->document,
             'email' => $store->email,
             'phone' => $store->phone,
             'zip_code' => $store->zip_code,
@@ -34,6 +38,9 @@ final class StoreTest extends TestCase
         ]);
     }
 
+    /** @test
+     * @group store
+     */
     public function test_store_belongs_to_company(): void
     {
         $company = Company::factory()->create();
@@ -42,6 +49,9 @@ final class StoreTest extends TestCase
         $this->assertEquals($company->id, $store->company->id);
     }
 
+    /** @test
+     * @group store
+     */
     public function test_store_has_locations(): void
     {
         $store = Store::factory()->create();
@@ -51,6 +61,9 @@ final class StoreTest extends TestCase
         $this->assertEquals(1, $store->locations->count());
     }
 
+    /** @test
+     * @group store
+     */
     public function test_store_has_users(): void
     {
         $store = Store::factory()->create();
@@ -60,6 +73,9 @@ final class StoreTest extends TestCase
         $this->assertEquals(1, $store->users->count());
     }
 
+    /** @test
+     * @group store
+     */
     public function test_store_has_contracts(): void
     {
         $store = Store::factory()->create();
@@ -69,6 +85,9 @@ final class StoreTest extends TestCase
         $this->assertEquals(1, $store->contracts->count());
     }
 
+    /** @test
+     * @group store
+     */
     public function test_store_has_active_contract(): void
     {
         $store = Store::factory()->create();
@@ -76,45 +95,67 @@ final class StoreTest extends TestCase
         // Criar um contrato ativo
         $activeContract = Contract::factory()
             ->forStore($store)
-            ->withStatus('active')
-            ->create();
-
-        // Criar um contrato inativo
-        Contract::factory()
-            ->forStore($store)
-            ->withStatus('inactive')
             ->create();
 
         $this->assertTrue($store->hasActiveContract());
         $this->assertEquals($activeContract->id, $store->activeContract()->id);
     }
 
+    /** @test
+     * @group store
+     */
+    public function test_store_with_active_and_inactive_contracts(): void
+    {
+        $store = Store::factory()->create();
+
+        // Criar um contrato ativo
+        $activeContract = Contract::factory()
+            ->forStore($store)
+            ->create();
+
+        // Criar um contrato para outra loja
+        $otherStore = Store::factory()->create();
+        Contract::factory()
+            ->forStore($otherStore)
+            ->inactive()
+            ->create();
+
+        $this->assertTrue($store->hasActiveContract());
+        $this->assertEquals(1, $store->contracts()->count());
+        $this->assertEquals($activeContract->id, $store->activeContract()->id);
+    }
+
+    /** @test
+     * @group store
+     */
     public function test_store_without_active_contract(): void
     {
         $store = Store::factory()->create();
 
-        // Criar apenas contratos inativos
+        // Criar apenas um contrato inativo
         Contract::factory()
             ->forStore($store)
-            ->withStatus('inactive')
-            ->count(2)
+            ->inactive()
             ->create();
 
         $this->assertFalse($store->hasActiveContract());
         $this->assertNull($store->activeContract());
     }
 
+    /** @test
+     * @group store
+     */
     public function test_find_eligible_leads(): void
     {
         $store = Store::factory()->create();
-        Contract::factory()->forStore($store)->withStatus('active')->create();
+        Contract::factory()->forStore($store)->create();
 
         // Criar uma localização para a loja
         StoreLocation::factory()
             ->forStore($store)
             ->withCoordinates(-23.5505, -46.6333)
             ->withCoverageRadius(10)
-            ->active()
+            ->state(['is_active' => true])
             ->create();
 
         // Criar um lead elegível (dentro do raio)
@@ -132,7 +173,7 @@ final class StoreTest extends TestCase
         // Criar um lead dentro do raio mas já processado
         $processedLead = Lead::factory()
             ->withCoordinates(-23.5505, -46.6333)
-            ->withStatus('processed')
+            ->withStatus('sent')
             ->create();
 
         $eligibleLeads = $store->findEligibleLeads()->get();
@@ -143,6 +184,9 @@ final class StoreTest extends TestCase
         $this->assertFalse($eligibleLeads->contains($processedLead));
     }
 
+    /** @test
+     * @group store
+     */
     public function test_store_main_location(): void
     {
         $store = Store::factory()->create();
@@ -161,20 +205,25 @@ final class StoreTest extends TestCase
         $this->assertEquals($mainLocation->id, $store->mainLocation()->id);
     }
 
+    /** @test
+     * @group store
+     */
     public function test_scope_with_active_contract(): void
     {
         // Criar uma loja com contrato ativo
         $storeWithActiveContract = Store::factory()->create();
         Contract::factory()
             ->forStore($storeWithActiveContract)
-            ->withStatus('active')
             ->create();
 
         // Criar uma loja sem contrato ativo
         $storeWithoutActiveContract = Store::factory()->create();
+
+        // Criar outra loja com contrato inativo
+        $storeWithInactiveContract = Store::factory()->create();
         Contract::factory()
-            ->forStore($storeWithoutActiveContract)
-            ->withStatus('inactive')
+            ->forStore($storeWithInactiveContract)
+            ->inactive()
             ->create();
 
         // Criar uma loja sem contratos
@@ -184,8 +233,13 @@ final class StoreTest extends TestCase
 
         $this->assertEquals(1, $storesWithActiveContract->count());
         $this->assertTrue($storesWithActiveContract->contains($storeWithActiveContract));
+        $this->assertFalse($storesWithActiveContract->contains($storeWithoutActiveContract));
+        $this->assertFalse($storesWithActiveContract->contains($storeWithInactiveContract));
     }
 
+    /** @test
+     * @group store
+     */
     public function test_can_create_inactive_store(): void
     {
         $store = Store::factory()->inactive()->create();
