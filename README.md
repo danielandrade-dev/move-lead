@@ -6,16 +6,20 @@ Sistema especializado para gerenciamento e distribuição de leads para diversos
 
 ### Gestão de Leads
 - Distribuição geolocalizada de leads
-- Suporte a múltiplos segmentos
+- Suporte a múltiplos segmentos com campos customizados
 - Sistema de garantia com substituição automática
-- Prevenção de duplicidade por telefone
+- Prevenção de duplicidade por telefone normalizado
 - Distribuição baseada em raio de cobertura
+- Validação inteligente de campos por tipo
+- Formatação automática de dados
 
 ### Empresas e Lojas
 - Gestão de múltiplas empresas
 - Múltiplas lojas por empresa
 - Múltiplos pontos de captação por loja
 - Controle de raio de cobertura por ponto
+- Gestão de usuários por hierarquia
+- Controle de acesso granular
 
 ### Contratos
 - Contratos por empresa e loja
@@ -23,6 +27,7 @@ Sistema especializado para gerenciamento e distribuição de leads para diversos
 - Fechamento automático após conclusão
 - Período de garantia de 7 dias
 - Controle de quantidade de leads
+- Análise automática de elegibilidade
 
 ## 💻 Requisitos Técnicos
 
@@ -32,104 +37,115 @@ Sistema especializado para gerenciamento e distribuição de leads para diversos
 - Composer
 - Node.js & NPM
 
-## 🛠 Instalação
+## 🏗 Arquitetura do Sistema
 
-```bash
-# Clone o repositório
-git clone [url-do-repositorio]
+### Models Base e Traits
+- `BaseModel`: Classe base com funcionalidades comuns
+- `HasCommonAttributes`: Trait para atributos compartilhados
+- `HasGeolocation`: Trait para funcionalidades de geolocalização
 
-# Instale as dependências PHP
-composer install
-
-# Instale as dependências JavaScript
-npm install
-
-# Configure o ambiente
-cp .env.example .env
-php artisan key:generate
-
-# Configure o banco de dados no arquivo .env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=seu_banco
-DB_USERNAME=seu_usuario
-DB_PASSWORD=sua_senha
-
-# Execute as migrações
-php artisan migrate
-
-# Compile os assets
-npm run dev
-```
+### Principais Models
+- `Company`: Gestão de empresas
+- `Store`: Gestão de lojas
+- `StoreLocation`: Pontos de captação
+- `Contract`: Contratos e garantias
+- `Lead`: Gestão de leads
+- `LeadStore`: Distribuição de leads
+- `LeadWarranty`: Sistema de garantias
+- `LeadCustomField`: Campos customizados por segmento
+- `Segments`: Gestão de segmentos
+- `SegmentField`: Campos configuráveis por segmento
+- `User`: Gestão de usuários e permissões
 
 ## 📊 Estrutura do Banco de Dados
 
-### Principais Tabelas
-- `companies` - Empresas
-- `stores` - Lojas
-- `store_locations` - Pontos de captação
-- `contracts` - Contratos
-- `leads` - Leads
-- `lead_stores` - Distribuição de leads
-- `lead_warranties` - Garantias de leads
+### Principais Tabelas e Relacionamentos
+```
+companies
+  ├── stores
+  │     ├── store_locations
+  │     └── contracts
+  └── users
 
-## 🔄 Fluxo de Garantia
+leads
+  ├── lead_phones
+  ├── lead_stores
+  │     └── lead_warranties
+  └── lead_custom_fields
 
-1. Cliente solicita garantia do lead
-2. Sistema analisa a solicitação
-3. Se aprovada:
-   - Lead é marcado para substituição
-   - Sistema busca automaticamente novo lead elegível
-   - Novo lead é distribuído quando disponível
-
-## ⚙️ Configurações Importantes
-
-### Raio de Cobertura
-- Mínimo: 10km por ponto de captação
-- Configurável por ponto de captação
-
-### Controle de Duplicidade
-- Verificação por telefone
-- Período de restrição: 3 meses
-- Aplicado por empresa/loja
-
-### Garantia de Leads
-- Percentual padrão: 30%
-- Período de fechamento: 7 dias
-- Substituição automática
-
-## 🔍 Monitoramento
-
-O sistema inclui comandos para monitoramento automático:
-
-```bash
-# Verifica contratos para fechamento automático
-php artisan contracts:check-auto-close
-
-# Processa distribuição de leads de garantia
-php artisan warranty:process-distribution
+segments
+  └── segment_fields
 ```
 
-## 📝 Comandos Úteis
+## 🔄 Fluxos do Sistema
+
+### Fluxo de Leads
+1. Recebimento do lead
+2. Normalização de telefones
+3. Validação de campos customizados
+4. Verificação de duplicidade
+5. Distribuição geolocalizada
+
+### Fluxo de Garantia
+1. Solicitação de garantia
+2. Análise automática de elegibilidade
+3. Aprovação/Rejeição
+4. Substituição automática
+5. Monitoramento de status
+
+## ⚙️ Configurações e Validações
+
+### Validações Implementadas
+- Telefones normalizados
+- Campos customizados por tipo
+- Coordenadas geográficas
+- Limites de contratos
+- Períodos de garantia
+
+### Controle de Duplicidade
+- Verificação por telefone normalizado
+- Período de restrição: 3 meses
+- Escopo por empresa/loja
+- Cache de verificações
+
+## 🔐 Segurança e Permissões
+
+### Níveis de Acesso
+- Administrador: Acesso total
+- Gerente: Gestão de empresa
+- Loja: Acesso restrito à loja
+- Analista: Análise de garantias
+
+### Proteções Implementadas
+- Soft Delete em registros críticos
+- Transações em operações complexas
+- Validações em múltiplas camadas
+- Logs de ações importantes
+
+## 🛠 Comandos e Manutenção
 
 ```bash
+# Verificar contratos
+php artisan contracts:check-auto-close
+
+# Processar garantias
+php artisan warranty:process-distribution
+
 # Limpar cache
 php artisan cache:clear
-
-# Atualizar classes
-composer dump-autoload
 
 # Executar testes
 php artisan test
 ```
 
-## 🔐 Segurança
+## 📝 Boas Práticas Implementadas
 
-- Validação de telefones
-- Proteção contra duplicidade
-- Transações em banco de dados
-- Controle de acesso por usuário
+- Tipagem forte em todos os models
+- Documentação PHPDoc completa
+- Validações centralizadas
+- Código limpo e organizado
+- Reutilização via traits
+- Padrões de projeto SOLID
 
 ## 🤝 Contribuição
 
