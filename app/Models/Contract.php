@@ -1,15 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 
-class Contract extends Model
+final class Contract extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'contractable_type',
@@ -24,7 +27,7 @@ class Contract extends Model
         'warranty_percentage',
         'is_active',
         'completed_at',
-        'auto_close_at'
+        'auto_close_at',
     ];
 
     protected $dates = [
@@ -34,13 +37,13 @@ class Contract extends Model
         'auto_close_at',
         'created_at',
         'updated_at',
-        'deleted_at'
+        'deleted_at',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'lead_price' => 'decimal:2',
-        'warranty_percentage' => 'integer'
+        'warranty_percentage' => 'integer',
     ];
 
     public function contractable()
@@ -69,9 +72,9 @@ class Contract extends Model
         return $this->leads_delivered >= $this->leads_contracted;
     }
 
-    public function incrementDeliveredLeads()
+    public function incrementDeliveredLeads(): void
     {
-        DB::transaction(function () {
+        DB::transaction(function (): void {
             $this->leads_delivered++;
 
             if ($this->isComplete()) {
@@ -86,13 +89,7 @@ class Contract extends Model
         });
     }
 
-    protected function scheduleAutoClose()
-    {
-        $this->auto_close_at = now()->addDays(7);
-        $this->save();
-    }
-
-    public function completeContract()
+    public function completeContract(): void
     {
         $this->is_active = false;
         $this->completed_at = now();
@@ -102,8 +99,8 @@ class Contract extends Model
 
     public function processLeadReturn(Lead $lead)
     {
-        if (!$this->hasReachedWarrantyLimit()) {
-            DB::transaction(function () {
+        if ( ! $this->hasReachedWarrantyLimit()) {
+            DB::transaction(function (): void {
                 $this->leads_returned++;
                 $this->leads_warranty_used++;
 
@@ -127,7 +124,9 @@ class Contract extends Model
 
     public function getWarrantyUsagePercentageAttribute()
     {
-        if ($this->leads_contracted === 0) return 0;
+        if (0 === $this->leads_contracted) {
+            return 0;
+        }
         return ($this->leads_warranty_used / $this->leads_contracted) * 100;
     }
 
@@ -139,18 +138,24 @@ class Contract extends Model
     public function scopePendingAutoClose($query)
     {
         return $query->where('is_active', true)
-                    ->whereNotNull('auto_close_at')
-                    ->where('auto_close_at', '<=', now());
+            ->whereNotNull('auto_close_at')
+            ->where('auto_close_at', '<=', now());
     }
 
-    protected static function boot()
+    protected static function boot(): void
     {
         parent::boot();
 
-        static::creating(function ($contract) {
-            if (!isset($contract->warranty_percentage)) {
+        static::creating(function ($contract): void {
+            if ( ! isset($contract->warranty_percentage)) {
                 $contract->warranty_percentage = 30;
             }
         });
+    }
+
+    protected function scheduleAutoClose(): void
+    {
+        $this->auto_close_at = now()->addDays(7);
+        $this->save();
     }
 }

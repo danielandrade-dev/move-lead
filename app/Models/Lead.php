@@ -1,14 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
-class Lead extends Model
+use InvalidArgumentException;
+
+final class Lead extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'segment_id',
@@ -21,17 +26,17 @@ class Lead extends Model
         'address',
         'latitude',
         'longitude',
-        'status'
+        'status',
     ];
 
     // Período padrão de restrição em meses
     protected static int $restrictionPeriodMonths = 3;
 
     // Método para alterar o período de restrição
-    public static function setRestrictionPeriod(int $months)
+    public static function setRestrictionPeriod(int $months): void
     {
         if ($months < 1) {
-            throw new \InvalidArgumentException('O período de restrição deve ser de pelo menos 1 mês');
+            throw new InvalidArgumentException('O período de restrição deve ser de pelo menos 1 mês');
         }
         self::$restrictionPeriodMonths = $months;
     }
@@ -45,19 +50,6 @@ class Lead extends Model
     public function phones()
     {
         return $this->hasMany(LeadPhone::class);
-    }
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        // Ao criar um lead, normaliza e salva o telefone
-        static::created(function ($lead) {
-            $lead->phones()->create([
-                'phone_normalized' => LeadPhone::normalizePhone($lead->phone),
-                'phone_original' => $lead->phone
-            ]);
-        });
     }
 
     // Encontrar lojas elegíveis considerando restrição de telefone
@@ -81,13 +73,13 @@ class Lead extends Model
                     point(?, ?)
                 ) * 0.001 <= store_locations.coverage_radius
             ', [$this->longitude, $this->latitude])
-            ->whereHas('contracts', function($query) {
+            ->whereHas('contracts', function ($query): void {
                 $query->where('is_active', true);
             })
             ->where('stores.is_active', true)
             ->where('store_locations.is_active', true)
             // Excluir lojas que já receberam leads com os mesmos telefones no período
-            ->whereNotExists(function ($query) use ($normalizedPhones) {
+            ->whereNotExists(function ($query) use ($normalizedPhones): void {
                 $query->select(DB::raw(1))
                     ->from('lead_stores')
                     ->join('leads', 'lead_stores.lead_id', '=', 'leads.id')
@@ -107,7 +99,7 @@ class Lead extends Model
 
         return LeadStore::query()
             ->where('store_id', $store->id)
-            ->whereHas('lead.phones', function ($query) use ($normalizedPhones) {
+            ->whereHas('lead.phones', function ($query) use ($normalizedPhones): void {
                 $query->whereIn('phone_normalized', $normalizedPhones);
             })
             ->where('created_at', '>=', now()->subMonths(self::$restrictionPeriodMonths))
@@ -120,13 +112,26 @@ class Lead extends Model
         $normalizedPhones = $this->phones->pluck('phone_normalized');
 
         return LeadStore::query()
-            ->whereHas('store', function ($query) use ($company) {
+            ->whereHas('store', function ($query) use ($company): void {
                 $query->where('company_id', $company->id);
             })
-            ->whereHas('lead.phones', function ($query) use ($normalizedPhones) {
+            ->whereHas('lead.phones', function ($query) use ($normalizedPhones): void {
                 $query->whereIn('phone_normalized', $normalizedPhones);
             })
             ->where('created_at', '>=', now()->subMonths(self::$restrictionPeriodMonths))
             ->exists();
+    }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        // Ao criar um lead, normaliza e salva o telefone
+        static::created(function ($lead): void {
+            $lead->phones()->create([
+                'phone_normalized' => LeadPhone::normalizePhone($lead->phone),
+                'phone_original' => $lead->phone,
+            ]);
+        });
     }
 }

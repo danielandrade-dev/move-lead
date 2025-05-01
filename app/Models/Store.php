@@ -1,14 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Store extends Model
+final class Store extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -20,7 +23,7 @@ class Store extends Model
         'city',
         'state',
         'zip_code',
-        'is_active'
+        'is_active',
     ];
 
     public function locations()
@@ -68,7 +71,7 @@ class Store extends Model
                     ) * 0.001
                 ) as min_distance_in_km
             ')
-            ->join('store_locations', function($join) use ($locationIds) {
+            ->join('store_locations', function ($join) use ($locationIds): void {
                 $join->whereIn('store_locations.id', $locationIds)
                     ->whereRaw('
                         ST_Distance_Sphere(
@@ -77,10 +80,10 @@ class Store extends Model
                         ) * 0.001 <= store_locations.coverage_radius
                     ');
             })
-            ->whereNotIn('leads.id', function($query) {
+            ->whereNotIn('leads.id', function ($query): void {
                 $query->select('lead_id')
                     ->from('lead_stores')
-                    ->whereIn('store_id', function($q) {
+                    ->whereIn('store_id', function ($q): void {
                         $q->select('id')
                             ->from('stores')
                             ->where('company_id', $this->company_id);

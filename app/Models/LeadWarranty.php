@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 
-class LeadWarranty extends Model
+final class LeadWarranty extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'lead_store_id',
@@ -19,36 +23,36 @@ class LeadWarranty extends Model
         'analysis_notes',
         'analyzed_by',
         'analyzed_at',
-        'replaced_at'
+        'replaced_at',
     ];
 
     protected $dates = ['analyzed_at', 'replaced_at'];
 
     // Processa a aprovação da garantia
-    public function approve(User $analyst, ?string $notes = null)
+    public function approve(User $analyst, ?string $notes = null): void
     {
-        DB::transaction(function () use ($analyst, $notes) {
+        DB::transaction(function () use ($analyst, $notes): void {
             $contract = $this->leadStore->contract;
 
-            if (!$contract->hasReachedWarrantyLimit()) {
+            if ( ! $contract->hasReachedWarrantyLimit()) {
                 $this->update([
                     'status' => 'waiting_replacement',
                     'analysis_notes' => $notes,
                     'analyzed_by' => $analyst->id,
-                    'analyzed_at' => now()
+                    'analyzed_at' => now(),
                 ]);
 
                 $contract->processLeadReturn($this->leadStore->lead);
             } else {
-                throw new \Exception(__('Warranty limit reached for this contract'));
+                throw new Exception(__('Warranty limit reached for this contract'));
             }
         });
     }
 
     // Quando um novo lead é atribuído como substituição
-    public function assignReplacementLead(Lead $newLead)
+    public function assignReplacementLead(Lead $newLead): void
     {
-        DB::transaction(function () use ($newLead) {
+        DB::transaction(function () use ($newLead): void {
             // Cria novo LeadStore para o lead de garantia
             LeadStore::create([
                 'lead_id' => $newLead->id,
@@ -56,13 +60,13 @@ class LeadWarranty extends Model
                 'contract_id' => $this->leadStore->contract_id,
                 'status' => 'sent',
                 'sent_at' => now(),
-                'is_warranty' => true
+                'is_warranty' => true,
             ]);
 
             $this->update([
                 'new_lead_id' => $newLead->id,
                 'status' => 'replaced',
-                'replaced_at' => now()
+                'replaced_at' => now(),
             ]);
         });
     }

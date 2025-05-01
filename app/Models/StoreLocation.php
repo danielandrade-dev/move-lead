@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
+use Exception;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class StoreLocation extends Model
+final class StoreLocation extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'store_id',
@@ -20,19 +24,8 @@ class StoreLocation extends Model
         'latitude',
         'longitude',
         'coverage_radius',
-        'is_active'
+        'is_active',
     ];
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::saving(function ($location) {
-            if ($location->coverage_radius < 10) {
-                throw new \Exception('O raio de cobertura mínimo é de 10km');
-            }
-        });
-    }
 
     public function store()
     {
@@ -50,10 +43,10 @@ class StoreLocation extends Model
                 ) * 0.001 as distance_in_km
             ', [$this->longitude, $this->latitude])
             ->havingRaw('distance_in_km <= ?', [$this->coverage_radius])
-            ->whereNotIn('id', function($query) {
+            ->whereNotIn('id', function ($query): void {
                 $query->select('lead_id')
                     ->from('lead_stores')
-                    ->whereIn('store_id', function($q) {
+                    ->whereIn('store_id', function ($q): void {
                         // Excluir lojas da mesma empresa
                         $q->select('id')
                             ->from('stores')
@@ -62,5 +55,16 @@ class StoreLocation extends Model
             })
             ->where('status', 'new')
             ->orderBy('distance_in_km');
+    }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::saving(function ($location): void {
+            if ($location->coverage_radius < 10) {
+                throw new Exception('O raio de cobertura mínimo é de 10km');
+            }
+        });
     }
 }
