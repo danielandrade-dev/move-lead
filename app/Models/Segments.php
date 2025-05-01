@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 final class Segments extends Model
@@ -17,6 +18,7 @@ final class Segments extends Model
      */
     protected $fillable = [
         'name',
+        'slug',
         'description',
         'is_active',
     ];
@@ -64,11 +66,40 @@ final class Segments extends Model
     }
 
     /**
+     * Escopo para filtrar segmentos ativos
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Escopo para filtrar segmentos inativos
+     */
+    public function scopeInactive($query)
+    {
+        return $query->where('is_active', false);
+    }
+
+    /**
      * Boot function from Laravel
      */
     protected static function boot(): void
     {
         parent::boot();
+
+        // Gera o slug automaticamente a partir do nome
+        static::creating(function ($segment): void {
+            if (empty($segment->slug)) {
+                $segment->slug = Str::slug($segment->name);
+            }
+        });
+
+        static::updating(function ($segment): void {
+            if ($segment->isDirty('name') && empty($segment->slug)) {
+                $segment->slug = Str::slug($segment->name);
+            }
+        });
 
         // Impede a exclusão de segmentos com leads associados
         static::deleting(function ($segment): void {

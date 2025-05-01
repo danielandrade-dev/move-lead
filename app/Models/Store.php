@@ -58,13 +58,13 @@ final class Store extends Model
 
     public function contracts()
     {
-        return $this->hasMany(Contract::class);
+        return $this->morphMany(Contract::class, 'contractable');
     }
 
     public function activeContract()
     {
         return $this->contracts()
-            ->active()
+            ->where('is_active', true)
             ->latest()
             ->first();
     }
@@ -128,7 +128,7 @@ final class Store extends Model
     public function hasActiveContract(): bool
     {
         return $this->contracts()
-            ->active()
+            ->where('is_active', true)
             ->exists();
     }
 
@@ -138,7 +138,15 @@ final class Store extends Model
     public function scopeWithActiveContract($query)
     {
         return $query->whereHas('contracts', function ($query): void {
-            $query->active();
+            $query->where('is_active', true);
         });
+    }
+
+    /**
+     * Escopo para lojas ativas
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }

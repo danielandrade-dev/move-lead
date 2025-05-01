@@ -33,10 +33,6 @@ final class Contract extends Model
         'is_active',
         'completed_at',
         'auto_close_at',
-        'company_id',
-        'store_id',
-        'leads_limit',
-        'leads_price',
     ];
 
     /**
@@ -55,11 +51,11 @@ final class Contract extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'lead_price' => 'decimal:2',
+        'leads_contracted' => 'integer',
+        'leads_delivered' => 'integer',
+        'leads_returned' => 'integer',
+        'leads_warranty_used' => 'integer',
         'warranty_percentage' => 'integer',
-        'company_id' => 'integer',
-        'store_id' => 'integer',
-        'leads_limit' => 'integer',
-        'leads_price' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -162,83 +158,6 @@ final class Contract extends Model
     }
 
     /**
-     * Relacionamento com a empresa
-     */
-    public function company()
-    {
-        return $this->belongsTo(Company::class);
-    }
-
-    /**
-     * Relacionamento com a loja
-     */
-    public function store()
-    {
-        return $this->belongsTo(Store::class);
-    }
-
-    /**
-     * Verifica se o contrato está dentro do período de vigência
-     */
-    public function isWithinPeriod(?Carbon $date = null): bool
-    {
-        $date ??= now();
-        return $date->between($this->start_date, $this->end_date);
-    }
-
-    /**
-     * Verifica se o contrato está expirado
-     */
-    public function isExpired(?Carbon $date = null): bool
-    {
-        $date ??= now();
-        return $date->isAfter($this->end_date);
-    }
-
-    /**
-     * Verifica se o contrato ainda não iniciou
-     */
-    public function hasNotStarted(?Carbon $date = null): bool
-    {
-        $date ??= now();
-        return $date->isBefore($this->start_date);
-    }
-
-    /**
-     * Retorna o número de leads enviados no período atual
-     */
-    public function getLeadsCount(?Carbon $startDate = null, ?Carbon $endDate = null): int
-    {
-        $query = LeadStore::query()
-            ->where('store_id', $this->store_id);
-
-        if ($startDate) {
-            $query->where('created_at', '>=', $startDate);
-        }
-
-        if ($endDate) {
-            $query->where('created_at', '<=', $endDate);
-        }
-
-        return $query->count();
-    }
-
-    /**
-     * Verifica se o limite de leads foi atingido
-     */
-    public function hasReachedLeadsLimit(): bool
-    {
-        if ( ! $this->leads_limit) {
-            return false;
-        }
-
-        return $this->getLeadsCount(
-            $this->start_date->startOfDay(),
-            $this->end_date->endOfDay(),
-        ) >= $this->leads_limit;
-    }
-
-    /**
      * Boot function from Laravel
      */
     protected static function boot(): void
@@ -256,11 +175,11 @@ final class Contract extends Model
                 throw new InvalidArgumentException('A data de início deve ser anterior à data de término');
             }
 
-            if (null !== $contract->leads_limit && $contract->leads_limit < 1) {
-                throw new InvalidArgumentException('O limite de leads deve ser maior que zero');
+            if (null !== $contract->leads_contracted && $contract->leads_contracted < 1) {
+                throw new InvalidArgumentException('O número de leads contratados deve ser maior que zero');
             }
 
-            if (null !== $contract->leads_price && $contract->leads_price < 0) {
+            if (null !== $contract->lead_price && $contract->lead_price < 0) {
                 throw new InvalidArgumentException('O preço dos leads não pode ser negativo');
             }
         });

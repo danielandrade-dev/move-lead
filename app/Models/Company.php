@@ -48,7 +48,7 @@ final class Company extends Model
      */
     public function contracts()
     {
-        return $this->hasMany(Contract::class);
+        return $this->morphMany(Contract::class, 'contractable');
     }
 
     /**
@@ -57,8 +57,10 @@ final class Company extends Model
     public function activeStores()
     {
         return $this->stores()
-            ->active()
-            ->withActiveContract();
+            ->where('is_active', true)
+            ->whereHas('contracts', function ($query): void {
+                $query->active();
+            });
     }
 
     /**
@@ -67,7 +69,7 @@ final class Company extends Model
     public function hasActiveContract(): bool
     {
         return $this->contracts()
-            ->active()
+            ->where('is_active', true)
             ->exists();
     }
 
@@ -77,7 +79,7 @@ final class Company extends Model
     public function activeContract()
     {
         return $this->contracts()
-            ->active()
+            ->where('is_active', true)
             ->latest()
             ->first();
     }
@@ -88,7 +90,7 @@ final class Company extends Model
     public function scopeWithActiveContract($query)
     {
         return $query->whereHas('contracts', function ($query): void {
-            $query->active();
+            $query->where('is_active', true);
         });
     }
 }

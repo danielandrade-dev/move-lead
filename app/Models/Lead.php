@@ -81,26 +81,28 @@ final class Lead extends BaseModel
     public function findEligibleStores()
     {
         $normalizedPhones = $this->phones->pluck('phone_normalized');
+        $lat = $this->latitude;
+        $lng = $this->longitude;
+        $point = "ST_SetSRID(ST_MakePoint($lng, $lat), 4326)";
 
-        return Store::select('stores.*')
-            ->join('store_locations', 'stores.id', '=', 'store_locations.store_id')
-            ->selectRaw('
-                MIN(
-                    ST_Distance_Sphere(
-                        point(store_locations.longitude, store_locations.latitude),
-                        point(?, ?)
-                    ) * 0.001
-                ) as min_distance_in_km
-            ', [$this->longitude, $this->latitude])
-            ->withinRadius($this->latitude, $this->longitude, DB::raw('store_locations.coverage_radius'))
-            ->whereHas('contracts', function ($query): void {
+        return Store::query()
+            ->select('stores.*')
+            ->addSelect(DB::raw("
+                ST_Distance(
+                    store_locations.geom,
+                    $point
+                ) * 0.001 as distance
+            "))
+            ->join('store_locations', function ($join) use ($point) {
+                $join->on('stores.id', '=', 'store_locations.store_id')
+                    ->whereRaw("ST_Distance(store_locations.geom, $point) * 0.001 <= store_locations.coverage_radius")
+                    ->where('store_locations.is_active', true);
+            })
+            ->whereHas('contracts', function ($query) {
                 $query->active();
             })
-            ->active()
-            ->whereHas('locations', function ($query): void {
-                $query->active();
-            })
-            ->whereNotExists(function ($query) use ($normalizedPhones): void {
+            ->where('stores.is_active', true)
+            ->whereNotExists(function ($query) use ($normalizedPhones) {
                 $query->select(DB::raw(1))
                     ->from('lead_stores')
                     ->join('leads', 'lead_stores.lead_id', '=', 'leads.id')
@@ -109,8 +111,18 @@ final class Lead extends BaseModel
                     ->whereIn('lead_phones.phone_normalized', $normalizedPhones)
                     ->where('lead_stores.created_at', '>=', now()->subMonths(self::$restrictionPeriodMonths));
             })
-            ->groupBy('stores.id')
-            ->orderBy('min_distance_in_km');
+            ->orderBy('distance')
+            ->distinct('stores.id');
+    }
+
+    /**
+     * Relacionamento com lojas que receberam este lead
+     */
+    public function stores()
+    {
+        return $this->belongsToMany(Store::class, 'lead_stores')
+            ->withPivot(['contract_id', 'status', 'sent_at', 'viewed_at', 'contacted_at', 'converted_at', 'returned_at'])
+            ->withTimestamps();
     }
 
     /**
