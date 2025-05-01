@@ -23,6 +23,7 @@ return new class () extends Migration {
             $table->decimal('longitude', 10, 8);
             $table->integer('coverage_radius')->default(10); // Raio em KM (mínimo 10)
             $table->boolean('is_active')->default(true);
+            $table->boolean('is_main')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

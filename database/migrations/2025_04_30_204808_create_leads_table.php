@@ -26,6 +26,7 @@ return new class () extends Migration {
             $table->string('external_id', 255)->nullable();
             $table->string('external_source', 255)->nullable();
             $table->enum('status', ['new' ,'pending' ,'approved' ,'rejected','archived','sent'])->default('new');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();
         });
