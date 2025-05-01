@@ -16,10 +16,12 @@ trait HasGeolocation
     {
         return DB::selectOne('
             SELECT ST_Distance_Sphere(
-                point(?, ?),
-                point(?, ?)
+                geom,
+                ST_SetSRID(ST_MakePoint(?, ?), 4326)
             ) * 0.001 as distance
-        ', [$this->longitude, $this->latitude, $longitude, $latitude])->distance;
+            FROM ' . $this->getTable() . '
+            WHERE id = ?
+        ', [$longitude, $latitude, $this->id])->distance;
     }
 
     /**
@@ -29,8 +31,8 @@ trait HasGeolocation
     {
         return $query->whereRaw('
             ST_Distance_Sphere(
-                point(longitude, latitude),
-                point(?, ?)
+                geom,
+                ST_SetSRID(ST_MakePoint(?, ?), 4326)
             ) * 0.001 <= ?
         ', [$longitude, $latitude, $radius]);
     }
@@ -41,10 +43,9 @@ trait HasGeolocation
     public function scopeOrderByDistance(Builder $query, float $latitude, float $longitude, string $direction = 'asc'): Builder
     {
         return $query->orderByRaw(
-            '
-            ST_Distance_Sphere(
-                point(longitude, latitude),
-                point(?, ?)
+            'ST_Distance_Sphere(
+                geom,
+                ST_SetSRID(ST_MakePoint(?, ?), 4326)
             ) * 0.001 ' . $direction,
             [$longitude, $latitude],
         );
@@ -59,5 +60,17 @@ trait HasGeolocation
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
         ];
+    }
+
+    /**
+     * Boot do trait
+     */
+    protected static function bootHasGeolocation(): void
+    {
+        static::saving(function ($model): void {
+            if (isset($model->latitude) && isset($model->longitude)) {
+                $model->geom = DB::raw("ST_SetSRID(ST_MakePoint($model->longitude, $model->latitude), 4326)");
+            }
+        });
     }
 }

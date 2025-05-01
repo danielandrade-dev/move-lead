@@ -27,7 +27,7 @@ services:
             - minio
             - rabbitmq
     pgsql:
-        image: 'postgres:17'
+        image: 'postgis/postgis:17-3.4'
         ports:
             - '${FORWARD_DB_PORT:-5432}:5432'
         environment:
@@ -94,10 +94,10 @@ services:
             - '${FORWARD_RABBITMQ_DASHBOARD_PORT:-15672}:15672'
         environment:
             RABBITMQ_HOST: '%'
-            RABBITMQ_USER: '${RABBITMQ_USER}'
-            RABBITMQ_PASSWORD: '${RABBITMQ_PASSWORD}'
-            RABBITMQ_VHOST: '${RABBITMQ_VHOST}'
-            RABBITMQ_QUEUE: '${RABBITMQ_QUEUE}'
+            RABBITMQ_USER: '${RABBITMQ_USER:-guest}'
+            RABBITMQ_PASSWORD: '${RABBITMQ_PASSWORD:-guest}'
+            RABBITMQ_VHOST: '${RABBITMQ_VHOST:-/}'
+            RABBITMQ_QUEUE: '${RABBITMQ_QUEUE:-default}'
         volumes:
             - 'sail-rabbitmq:/rabbitmq_data'
         networks:
@@ -119,4 +119,6 @@ volumes:
     sail-redis:
         driver: local
     sail-minio:
+        driver: local
+    sail-rabbitmq:
         driver: local
