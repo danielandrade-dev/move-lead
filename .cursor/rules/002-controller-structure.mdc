@@ -1,0 +1,74 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Estrutura Padrão de Controllers
+
+Os controllers devem seguir uma estrutura consistente para manter o código organizado e facilitar a manutenção.
+
+## Estrutura Básica
+
+```php
+namespace App\Http\Controllers;
+
+use App\Http\Requests\CustomRequest;
+use App\Models\Model;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class ExampleController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(): Response
+    {
+        return Inertia::render('Example/Index', [
+            'items' => Model::paginate()
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create(): Response
+    {
+        return Inertia::render('Example/Create');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(CustomRequest $request)
+    {
+        // Validação já feita no FormRequest
+        $validated = $request->validated();
+
+        // Criar o recurso
+        Model::create($validated);
+
+        return redirect()->route('example.index')
+            ->with('message', 'Recurso criado com sucesso!');
+    }
+}
+```
+
+## Regras Gerais
+
+1. Use Form Requests para validação
+2. Retorne responses do Inertia para views
+3. Use tipos de retorno explícitos
+4. Mantenha os métodos concisos e com responsabilidade única
+5. Use injeção de dependência quando necessário
+6. Documente os métodos públicos
+7. Siga os verbos HTTP padrão (GET, POST, PUT, DELETE)
+
+## Organização de Diretórios
+
+Controllers devem ser organizados em namespaces lógicos em [app/Http/Controllers](mdc:app/Http/Controllers):
+
+- `Auth/` - Controllers relacionados à autenticação
+- `Settings/` - Controllers de configurações
+- `Api/` - Controllers da API (quando aplicável)

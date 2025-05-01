@@ -1,0 +1,63 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Estrutura de Componentes React
+
+Os componentes React devem seguir uma estrutura consistente para manter o código organizado e reutilizável.
+
+## Estrutura Básica
+
+```tsx
+import React from 'react';
+import { cn } from '@/lib/utils';
+
+interface ExampleProps {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function Example({ title, children, className }: ExampleProps) {
+  return (
+    <div className={cn('base-classes', className)}>
+      <h2 className="text-lg font-semibold">{title}</h2>
+      <div className="mt-4">{children}</div>
+    </div>
+  );
+}
+```
+
+## Regras Gerais
+
+1. Use TypeScript para todos os componentes
+2. Defina interfaces para as props
+3. Use funções ao invés de classes
+4. Nomeie componentes com PascalCase
+5. Use a função `cn()` para composição de classes CSS
+6. Mantenha componentes pequenos e com responsabilidade única
+7. Documente props complexas
+8. Organize imports em grupos lógicos:
+   - React e hooks
+   - Componentes externos
+   - Componentes internos
+   - Utilitários e tipos
+   - Estilos
+
+## Organização de Diretórios
+
+Componentes devem ser organizados em [resources/js/components](mdc:resources/js/components):
+
+- `ui/` - Componentes base reutilizáveis
+- `forms/` - Componentes de formulário
+- `layout/` - Componentes de layout
+- `shared/` - Componentes compartilhados entre módulos
+
+## Boas Práticas
+
+1. Extraia lógica complexa para hooks customizados
+2. Use composição ao invés de herança
+3. Mantenha o estado o mais local possível
+4. Use memo e useCallback com moderação
+5. Prefira componentes controlados para formulários

@@ -1,0 +1,38 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Padronização de Cabeçalho para Arquivos de Código
+
+Todo arquivo de código deve seguir este padrão de cabeçalho:
+
+```php
+/**
+ * Move Lead - Sistema de Gestão de Leads
+ *
+ * @package   MoveLead
+ * @author    Nome do Autor <email@exemplo.com>
+ * @copyright Copyright (c) 2024 Move Lead
+ * @license   MIT License
+ */
+```
+
+Para arquivos TypeScript/JavaScript:
+
+```typescript
+/**
+ * Move Lead - Lead Management System
+ *
+ * @package MoveLead
+ * @author  Nome do Autor <email@exemplo.com>
+ * @license MIT License
+ */
+```
+
+## Regras Gerais
+
+1. Todo arquivo deve ter um cabeçalho documentando seu propósito
+2. O cabeçalho deve incluir informações sobre autoria e licença
+3. Mantenha a consistência na formatação entre arquivos do mesmo tipo
+4. Use DocBlocks para PHP e JSDoc para TypeScript/JavaScript

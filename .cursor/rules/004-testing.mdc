@@ -1,0 +1,98 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Padrões de Teste
+
+Este documento define as convenções para escrita de testes no projeto, abrangendo testes de feature e unit.
+
+## Estrutura de Teste PHP
+
+```php
+namespace Tests\Feature;
+
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+        // Setup comum para todos os testes
+    }
+
+    public function test_example_feature(): void
+    {
+        // Arrange
+        $user = User::factory()->create();
+
+        // Act
+        $response = $this->actingAs($user)
+            ->get(route('example.index'));
+
+        // Assert
+        $response->assertInertia(fn ($page) => $page
+            ->component('Example/Index')
+            ->has('items')
+        );
+    }
+}
+```
+
+## Estrutura de Teste React
+
+```typescript
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { Example } from './Example';
+
+describe('Example', () => {
+  it('should render correctly', () => {
+    // Arrange
+    render(<Example title="Test" />);
+
+    // Act
+    const title = screen.getByText('Test');
+
+    // Assert
+    expect(title).toBeInTheDocument();
+  });
+});
+```
+
+## Regras Gerais
+
+1. Use o padrão Arrange-Act-Assert (AAA)
+2. Um teste por comportamento
+3. Nomes descritivos para os testes
+4. Use factories para criar dados de teste
+5. Isole os testes uns dos outros
+6. Evite testes frágeis
+7. Documente casos especiais
+
+## Organização
+
+Testes devem ser organizados em:
+
+- [tests/Feature](mdc:tests/Feature) - Testes de integração/feature
+- [tests/Unit](mdc:tests/Unit) - Testes unitários
+- `tests/Browser` - Testes E2E (quando necessário)
+
+## Convenções de Nomenclatura
+
+1. Arquivos de teste PHP: `*Test.php`
+2. Arquivos de teste React: `*.test.tsx`
+3. Métodos de teste: `test_*` ou `it_should_*`
+4. Descrições claras do comportamento testado
+
+## Cobertura
+
+1. Mínimo de 80% de cobertura para código novo
+2. 100% de cobertura para código crítico
+3. Executar testes antes de cada commit
+4. Manter testes rápidos e confiáveis
