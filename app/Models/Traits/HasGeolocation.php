@@ -15,10 +15,10 @@ trait HasGeolocation
     public function getDistanceTo(float $latitude, float $longitude): float
     {
         return DB::selectOne('
-            SELECT ST_Distance_Sphere(
-                geom,
-                ST_SetSRID(ST_MakePoint(?, ?), 4326)
-            ) * 0.001 as distance
+            SELECT ST_Distance(
+                geom::geography,
+                ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography
+            ) / 1000 as distance
             FROM ' . $this->getTable() . '
             WHERE id = ?
         ', [$longitude, $latitude, $this->id])->distance;
@@ -30,10 +30,10 @@ trait HasGeolocation
     public function scopeWithinRadius(Builder $query, float $latitude, float $longitude, float $radius): Builder
     {
         return $query->whereRaw('
-            ST_Distance_Sphere(
-                geom,
-                ST_SetSRID(ST_MakePoint(?, ?), 4326)
-            ) * 0.001 <= ?
+            ST_Distance(
+                geom::geography,
+                ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography
+            ) / 1000 <= ?
         ', [$longitude, $latitude, $radius]);
     }
 
@@ -43,10 +43,10 @@ trait HasGeolocation
     public function scopeOrderByDistance(Builder $query, float $latitude, float $longitude, string $direction = 'asc'): Builder
     {
         return $query->orderByRaw(
-            'ST_Distance_Sphere(
-                geom,
-                ST_SetSRID(ST_MakePoint(?, ?), 4326)
-            ) * 0.001 ' . $direction,
+            'ST_Distance(
+                geom::geography,
+                ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography
+            ) / 1000 ' . $direction,
             [$longitude, $latitude],
         );
     }
