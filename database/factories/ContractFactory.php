@@ -27,12 +27,16 @@ final class ContractFactory extends Factory
         $endDate = fake()->dateTimeBetween($startDate, '+2 years');
 
         return [
-            'company_id' => Company::factory(),
-            'store_id' => Store::factory(),
+            'contractable_type' => Company::class,
+            'contractable_id' => Company::factory(),
             'start_date' => $startDate,
             'end_date' => $endDate,
-            'monthly_value' => fake()->randomFloat(2, 100, 10000),
-            'status' => 'active',
+            'lead_price' => fake()->randomFloat(2, 100, 10000),
+            'leads_contracted' => fake()->numberBetween(10, 100),
+            'leads_delivered' => 0,
+            'leads_returned' => 0,
+            'leads_warranty_used' => 0,
+            'warranty_percentage' => 30,
             'is_active' => true,
         ];
     }
@@ -48,22 +52,13 @@ final class ContractFactory extends Factory
     }
 
     /**
-     * Define um status específico para o contrato
-     */
-    public function withStatus(string $status): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'status' => $status,
-        ]);
-    }
-
-    /**
      * Define uma empresa específica para o contrato
      */
     public function forCompany(Company $company): static
     {
         return $this->state(fn (array $attributes) => [
-            'company_id' => $company->id,
+            'contractable_type' => Company::class,
+            'contractable_id' => $company->id,
         ]);
     }
 
@@ -73,8 +68,8 @@ final class ContractFactory extends Factory
     public function forStore(Store $store): static
     {
         return $this->state(fn (array $attributes) => [
-            'store_id' => $store->id,
-            'company_id' => $store->company_id,
+            'contractable_type' => Store::class,
+            'contractable_id' => $store->id,
         ]);
     }
 

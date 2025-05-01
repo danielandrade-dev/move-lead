@@ -29,7 +29,11 @@ final class StoreLocationFactory extends Factory
         return [
             'store_id' => Store::factory(),
             'name' => fake()->words(3, true),
-            'coverage_radius' => fake()->randomFloat(2, 1, 100),
+            'coverage_radius' => fake()->numberBetween(1, 100),
+            'address' => fake()->address(),
+            'city' => fake()->city(),
+            'state' => fake()->stateAbbr(),
+            'zip_code' => fake()->postcode(),
             'latitude' => $latitude,
             'longitude' => $longitude,
             'is_main' => false,
@@ -81,7 +85,7 @@ final class StoreLocationFactory extends Factory
     /**
      * Define um raio de cobertura específico
      */
-    public function withCoverageRadius(float $radius): static
+    public function withCoverageRadius(int $radius): static
     {
         return $this->state(fn (array $attributes) => [
             'coverage_radius' => $radius,

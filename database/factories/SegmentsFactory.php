@@ -6,6 +6,7 @@ namespace Database\Factories;
 
 use App\Models\Segments;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Segments>
@@ -21,8 +22,11 @@ final class SegmentsFactory extends Factory
      */
     public function definition(): array
     {
+        $name = fake()->words(2, true);
+
         return [
-            'name' => fake()->words(2, true),
+            'name' => $name,
+            'slug' => Str::slug($name),
             'description' => fake()->sentence(),
             'is_active' => true,
         ];

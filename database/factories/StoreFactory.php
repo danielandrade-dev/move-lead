@@ -25,6 +25,7 @@ final class StoreFactory extends Factory
         return [
             'company_id' => Company::factory(),
             'name' => fake()->company() . ' ' . fake()->companySuffix(),
+            'document' => fake()->numerify('##.###.###/####-##'),
             'email' => fake()->companyEmail(),
             'phone' => fake()->numerify('(##) #####-####'),
             'zip_code' => fake()->numerify('#####-###'),
