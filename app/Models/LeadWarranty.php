@@ -7,10 +7,19 @@ namespace App\Models;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Modelo de Garantia de Lead
+ *
+ * Representa o processo de garantia para leads com problemas.
+ * Gerencia todo o ciclo de vida da garantia, desde a solicitação até a
+ * substituição ou rejeição do lead.
+ */
 final class LeadWarranty extends BaseModel
 {
     /**
      * Status possíveis para a garantia
+     *
+     * Constantes que definem os possíveis estados de uma garantia no sistema
      */
     public const STATUS_PENDING = 'pending';
     public const STATUS_APPROVED = 'approved';
@@ -20,6 +29,8 @@ final class LeadWarranty extends BaseModel
 
     /**
      * Atributos que são permitidos para atribuição em massa
+     *
+     * @var array<int, string>
      */
     protected $fillable = [
         'lead_store_id',
@@ -35,6 +46,8 @@ final class LeadWarranty extends BaseModel
 
     /**
      * Atributos que devem ser convertidos para tipos nativos
+     *
+     * @var array<string, string>
      */
     protected $casts = [
         'lead_store_id' => 'integer',
@@ -49,7 +62,9 @@ final class LeadWarranty extends BaseModel
     ];
 
     /**
-     * Lista de status possíveis
+     * Retorna a lista de status possíveis com seus rótulos
+     *
+     * @return array<string, string> Matriz associativa com os status possíveis e seus nomes legíveis
      */
     public static function getStatusList(): array
     {
@@ -63,7 +78,11 @@ final class LeadWarranty extends BaseModel
     }
 
     /**
-     * Relacionamento com o LeadStore original
+     * Define o relacionamento com o LeadStore original
+     *
+     * Uma garantia está associada a um único registro de lead-loja
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo Relacionamento com o LeadStore
      */
     public function leadStore()
     {
@@ -71,7 +90,11 @@ final class LeadWarranty extends BaseModel
     }
 
     /**
-     * Relacionamento com o novo Lead (substituição)
+     * Define o relacionamento com o novo Lead (substituição)
+     *
+     * Uma garantia pode estar associada a um novo lead quando substituída
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo Relacionamento com o novo Lead
      */
     public function newLead()
     {
@@ -79,7 +102,9 @@ final class LeadWarranty extends BaseModel
     }
 
     /**
-     * Relacionamento com o analista
+     * Define o relacionamento com o analista que avaliou a garantia
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo Relacionamento com o usuário analista
      */
     public function analyst()
     {
@@ -88,6 +113,14 @@ final class LeadWarranty extends BaseModel
 
     /**
      * Processa a aprovação da garantia
+     *
+     * Atualiza o status para aguardando substituição e incrementa o contador
+     * de garantias utilizadas no contrato
+     *
+     * @param User $analyst Usuário analista que aprovou a garantia
+     * @param string|null $notes Notas adicionais sobre a aprovação
+     * @throws Exception Se o limite de garantia do contrato foi atingido
+     * @return void
      */
     public function approve(User $analyst, ?string $notes = null): void
     {
@@ -111,6 +144,12 @@ final class LeadWarranty extends BaseModel
 
     /**
      * Rejeita a solicitação de garantia
+     *
+     * Atualiza o status para rejeitado e registra o analista e as notas
+     *
+     * @param User $analyst Usuário analista que rejeitou a garantia
+     * @param string $notes Notas explicando o motivo da rejeição
+     * @return void
      */
     public function reject(User $analyst, string $notes): void
     {
@@ -123,7 +162,13 @@ final class LeadWarranty extends BaseModel
     }
 
     /**
-     * Atribui um novo lead como substituição
+     * Atribui um novo lead como substituição para a garantia
+     *
+     * Cria um novo registro LeadStore para o lead substituto e
+     * atualiza o status da garantia para substituído
+     *
+     * @param Lead $newLead O novo lead que substituirá o original
+     * @return void
      */
     public function assignReplacementLead(Lead $newLead): void
     {
@@ -147,6 +192,8 @@ final class LeadWarranty extends BaseModel
 
     /**
      * Verifica se a garantia está pendente de análise
+     *
+     * @return bool Verdadeiro se o status for pendente
      */
     public function isPending(): bool
     {
@@ -155,6 +202,10 @@ final class LeadWarranty extends BaseModel
 
     /**
      * Verifica se a garantia foi aprovada
+     *
+     * Considera aprovada se estiver em qualquer um dos estados pós-aprovação
+     *
+     * @return bool Verdadeiro se a garantia foi aprovada, aguarda substituição ou já foi substituída
      */
     public function isApproved(): bool
     {
@@ -163,6 +214,8 @@ final class LeadWarranty extends BaseModel
 
     /**
      * Verifica se a garantia foi rejeitada
+     *
+     * @return bool Verdadeiro se o status for rejeitado
      */
     public function isRejected(): bool
     {
@@ -171,6 +224,8 @@ final class LeadWarranty extends BaseModel
 
     /**
      * Verifica se a garantia já foi substituída
+     *
+     * @return bool Verdadeiro se o status for substituído
      */
     public function isReplaced(): bool
     {
@@ -178,7 +233,10 @@ final class LeadWarranty extends BaseModel
     }
 
     /**
-     * Escopo para garantias pendentes
+     * Escopo para filtrar garantias pendentes
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query Query do Eloquent
+     * @return \Illuminate\Database\Eloquent\Builder Query modificada
      */
     public function scopePending($query)
     {
@@ -186,7 +244,12 @@ final class LeadWarranty extends BaseModel
     }
 
     /**
-     * Escopo para garantias aprovadas
+     * Escopo para filtrar garantias aprovadas
+     *
+     * Inclui todos os estados após a aprovação
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query Query do Eloquent
+     * @return \Illuminate\Database\Eloquent\Builder Query modificada
      */
     public function scopeApproved($query)
     {
@@ -198,7 +261,10 @@ final class LeadWarranty extends BaseModel
     }
 
     /**
-     * Escopo para garantias rejeitadas
+     * Escopo para filtrar garantias rejeitadas
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query Query do Eloquent
+     * @return \Illuminate\Database\Eloquent\Builder Query modificada
      */
     public function scopeRejected($query)
     {
@@ -206,7 +272,10 @@ final class LeadWarranty extends BaseModel
     }
 
     /**
-     * Escopo para garantias substituídas
+     * Escopo para filtrar garantias substituídas
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query Query do Eloquent
+     * @return \Illuminate\Database\Eloquent\Builder Query modificada
      */
     public function scopeReplaced($query)
     {

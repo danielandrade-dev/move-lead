@@ -9,6 +9,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * Modelo de Loja
+ *
+ * Representa as lojas que recebem e trabalham com leads.
+ * Inclui funcionalidades para geolocalização, gestão de contratos
+ * e integração com usuários e localizações de captação.
+ */
 final class Store extends Model
 {
     use HasFactory;
@@ -17,6 +24,8 @@ final class Store extends Model
 
     /**
      * Atributos que são permitidos para atribuição em massa
+     *
+     * @var array<int, string>
      */
     protected $fillable = [
         'company_id',
@@ -32,6 +41,8 @@ final class Store extends Model
 
     /**
      * Atributos que devem ser convertidos para tipos nativos
+     *
+     * @var array<string, string>
      */
     protected $casts = [
         'company_id' => 'integer',
@@ -41,26 +52,62 @@ final class Store extends Model
         'deleted_at' => 'datetime',
     ];
 
+    /**
+     * Define o relacionamento com as localizações da loja
+     *
+     * Uma loja pode ter múltiplas localizações/pontos de captação
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany Relacionamento com as localizações
+     */
     public function locations()
     {
         return $this->hasMany(StoreLocation::class);
     }
 
+    /**
+     * Define o relacionamento com a empresa
+     *
+     * Uma loja pertence a uma única empresa
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo Relacionamento com a empresa
+     */
     public function company()
     {
         return $this->belongsTo(Company::class);
     }
 
+    /**
+     * Define o relacionamento com os usuários da loja
+     *
+     * Uma loja pode ter múltiplos usuários associados
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany Relacionamento com os usuários
+     */
     public function users()
     {
         return $this->hasMany(User::class);
     }
 
+    /**
+     * Define o relacionamento com os contratos da loja
+     *
+     * Uma loja pode ter múltiplos contratos (ativos ou inativos)
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany Relacionamento morfológico com os contratos
+     */
     public function contracts()
     {
         return $this->morphMany(Contract::class, 'contractable');
     }
 
+    /**
+     * Retorna o contrato ativo mais recente da loja
+     *
+     * Utiliza o relacionamento de contratos filtrando apenas os ativos
+     * e ordenando pelo mais recente
+     *
+     * @return Contract|null O contrato ativo mais recente ou null se não existir
+     */
     public function activeContract()
     {
         return $this->contracts()
@@ -69,7 +116,14 @@ final class Store extends Model
             ->first();
     }
 
-    // Método para encontrar leads elegíveis considerando todos os pontos de captação
+    /**
+     * Encontra leads elegíveis para a loja considerando todos os pontos de captação
+     *
+     * Utiliza a distância geográfica, o raio de cobertura e verifica se o lead
+     * já foi enviado para a empresa da loja
+     *
+     * @return \Illuminate\Database\Eloquent\Builder|Collection Query com os leads elegíveis ou coleção vazia
+     */
     public function findEligibleLeads()
     {
         $locationIds = $this->locations()
@@ -114,6 +168,10 @@ final class Store extends Model
 
     /**
      * Retorna a localização principal da loja
+     *
+     * Localização marcada como principal (is_main = true)
+     *
+     * @return StoreLocation|null A localização principal ou null se não existir
      */
     public function mainLocation()
     {
@@ -124,6 +182,8 @@ final class Store extends Model
 
     /**
      * Verifica se a loja tem contrato ativo
+     *
+     * @return bool Verdadeiro se a loja tiver pelo menos um contrato ativo
      */
     public function hasActiveContract(): bool
     {
@@ -133,7 +193,10 @@ final class Store extends Model
     }
 
     /**
-     * Escopo para lojas com contrato ativo
+     * Escopo para filtrar lojas com contrato ativo
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query Query do Eloquent
+     * @return \Illuminate\Database\Eloquent\Builder Query modificada
      */
     public function scopeWithActiveContract($query)
     {
@@ -143,7 +206,10 @@ final class Store extends Model
     }
 
     /**
-     * Escopo para lojas ativas
+     * Escopo para filtrar lojas ativas
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query Query do Eloquent
+     * @return \Illuminate\Database\Eloquent\Builder Query modificada
      */
     public function scopeActive($query)
     {

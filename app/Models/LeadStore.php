@@ -7,10 +7,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 
+/**
+ * Modelo de Associação entre Lead e Loja
+ *
+ * Representa a relação entre um lead e uma loja, incluindo o status do lead
+ * e todo o histórico de interação entre a loja e o potencial cliente.
+ * Gerencia também o processo de garantia e substituição de leads.
+ */
 final class LeadStore extends Model
 {
     /**
      * Status possíveis para o lead
+     *
+     * Constantes que definem os possíveis estados de um lead no sistema
      */
     public const STATUS_NEW = 'new';
     public const STATUS_CONTACTED = 'contacted';
@@ -22,8 +31,11 @@ final class LeadStore extends Model
     public const STATUS_WARRANTY_REJECTED = 'warranty_rejected';
     public const STATUS_WARRANTY_WAITING_REPLACEMENT = 'warranty_waiting_replacement';
     public const STATUS_WARRANTY_REPLACED = 'warranty_replaced';
+
     /**
      * Atributos que são permitidos para atribuição em massa
+     *
+     * @var array<int, string>
      */
     protected $fillable = [
         'lead_id',
@@ -35,6 +47,8 @@ final class LeadStore extends Model
 
     /**
      * Atributos que devem ser convertidos para tipos nativos
+     *
+     * @var array<string, string>
      */
     protected $casts = [
         'lead_id' => 'integer',
@@ -46,7 +60,9 @@ final class LeadStore extends Model
     ];
 
     /**
-     * Lista de status possíveis
+     * Retorna a lista de status possíveis com seus rótulos
+     *
+     * @return array<string, string> Matriz associativa com os status possíveis e seus nomes legíveis
      */
     public static function getStatusList(): array
     {
@@ -65,7 +81,11 @@ final class LeadStore extends Model
     }
 
     /**
-     * Relacionamento com o lead
+     * Define o relacionamento com o lead
+     *
+     * Uma associação lead-loja pertence a um único lead
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo Relacionamento com o lead
      */
     public function lead()
     {
@@ -73,7 +93,11 @@ final class LeadStore extends Model
     }
 
     /**
-     * Relacionamento com a loja
+     * Define o relacionamento com a loja
+     *
+     * Uma associação lead-loja pertence a uma única loja
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo Relacionamento com a loja
      */
     public function store()
     {
@@ -81,7 +105,11 @@ final class LeadStore extends Model
     }
 
     /**
-     * Escopo para leads com determinado status
+     * Escopo para filtrar associações por status específico
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query Query do Eloquent
+     * @param string $status Status a ser filtrado
+     * @return \Illuminate\Database\Eloquent\Builder Query modificada
      */
     public function scopeWithStatus($query, string $status)
     {
@@ -89,7 +117,10 @@ final class LeadStore extends Model
     }
 
     /**
-     * Escopo para leads convertidos
+     * Escopo para filtrar apenas leads convertidos
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query Query do Eloquent
+     * @return \Illuminate\Database\Eloquent\Builder Query modificada
      */
     public function scopeConverted($query)
     {
@@ -97,7 +128,10 @@ final class LeadStore extends Model
     }
 
     /**
-     * Escopo para leads não convertidos
+     * Escopo para filtrar leads não convertidos
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query Query do Eloquent
+     * @return \Illuminate\Database\Eloquent\Builder Query modificada
      */
     public function scopeNotConverted($query)
     {
@@ -106,6 +140,8 @@ final class LeadStore extends Model
 
     /**
      * Verifica se o lead foi convertido
+     *
+     * @return bool Verdadeiro se o status for 'convertido', falso caso contrário
      */
     public function isConverted(): bool
     {
@@ -113,7 +149,12 @@ final class LeadStore extends Model
     }
 
     /**
-     * Atualiza o status do lead
+     * Atualiza o status do lead e adiciona notas opcionais
+     *
+     * @param string $status Novo status a ser definido
+     * @param string|null $notes Notas adicionais sobre a mudança de status (opcional)
+     * @throws InvalidArgumentException Se o status fornecido não for válido
+     * @return void
      */
     public function updateStatus(string $status, ?string $notes = null): void
     {
@@ -126,5 +167,4 @@ final class LeadStore extends Model
             'notes' => $notes,
         ]);
     }
-
 }

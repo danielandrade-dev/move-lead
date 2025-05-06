@@ -8,17 +8,29 @@ use App\Models\Traits\HasGeolocation;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
+/**
+ * Modelo de Lead
+ *
+ * Representa os potenciais clientes que são captados e distribuídos para as lojas.
+ * Inclui funcionalidades para geolocalização, restrições de distribuição, e relacionamentos com lojas.
+ */
 final class Lead extends BaseModel
 {
     use HasGeolocation;
 
     /**
      * Período padrão de restrição em meses
+     *
+     * Define por quanto tempo um lead não pode ser reenviado para a mesma empresa/loja
+     *
+     * @var int
      */
     protected static int $restrictionPeriodMonths = 3;
 
     /**
      * Atributos que são permitidos para atribuição em massa
+     *
+     * @var array<int, string>
      */
     protected $fillable = [
         'segment_id',
@@ -37,6 +49,8 @@ final class Lead extends BaseModel
 
     /**
      * Atributos que devem ser convertidos para tipos nativos
+     *
+     * @var array<string, string>
      */
     protected $casts = [
         'latitude' => 'float',
@@ -49,7 +63,13 @@ final class Lead extends BaseModel
     ];
 
     /**
-     * Define o período de restrição
+     * Define o período de restrição para distribuição de leads
+     *
+     * Configura por quantos meses um lead não pode ser reenviado para a mesma empresa/loja
+     *
+     * @param int $months Número de meses para o período de restrição
+     * @throws InvalidArgumentException Se o número de meses for menor que 1
+     * @return void
      */
     public static function setRestrictionPeriod(int $months): void
     {
@@ -60,7 +80,9 @@ final class Lead extends BaseModel
     }
 
     /**
-     * Retorna o período de restrição atual
+     * Retorna o período de restrição atual em meses
+     *
+     * @return int Número de meses configurado para restrição
      */
     public static function getRestrictionPeriod(): int
     {
@@ -68,7 +90,11 @@ final class Lead extends BaseModel
     }
 
     /**
-     * Relacionamento com os telefones do lead
+     * Define o relacionamento com os telefones do lead
+     *
+     * Um lead pode ter múltiplos telefones associados
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany Relacionamento com os telefones
      */
     public function phones()
     {
@@ -76,7 +102,12 @@ final class Lead extends BaseModel
     }
 
     /**
-     * Encontra lojas elegíveis considerando restrição de telefone
+     * Encontra lojas elegíveis para receber este lead
+     *
+     * Considera restrições de telefone, distância geográfica e
+     * contratos ativos para determinar elegibilidade
+     *
+     * @return \Illuminate\Database\Eloquent\Builder Query com as lojas elegíveis ordenadas por distância
      */
     public function findEligibleStores()
     {
@@ -116,7 +147,12 @@ final class Lead extends BaseModel
     }
 
     /**
-     * Relacionamento com lojas que receberam este lead
+     * Define o relacionamento com as lojas que receberam este lead
+     *
+     * Relação many-to-many com a tabela pivô lead_stores que contém
+     * informações adicionais sobre o envio do lead
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany Relacionamento com as lojas
      */
     public function stores()
     {
@@ -126,7 +162,10 @@ final class Lead extends BaseModel
     }
 
     /**
-     * Verifica se um lead já foi enviado para uma loja no período
+     * Verifica se um lead já foi enviado para uma loja específica no período de restrição
+     *
+     * @param Store $store A loja a ser verificada
+     * @return bool Verdadeiro se o lead já foi enviado para a loja dentro do período de restrição
      */
     public function hasBeenSentToStore(Store $store): bool
     {
@@ -136,7 +175,10 @@ final class Lead extends BaseModel
     }
 
     /**
-     * Verifica se um lead já foi enviado para uma empresa no período
+     * Verifica se um lead já foi enviado para qualquer loja de uma empresa no período de restrição
+     *
+     * @param Company $company A empresa a ser verificada
+     * @return bool Verdadeiro se o lead já foi enviado para alguma loja da empresa dentro do período de restrição
      */
     public function hasBeenSentToCompany(Company $company): bool
     {
@@ -148,7 +190,12 @@ final class Lead extends BaseModel
     }
 
     /**
-     * Boot function from Laravel
+     * Método de inicialização do modelo
+     *
+     * Configura eventos que são disparados durante o ciclo de vida do modelo,
+     * como normalização automática de telefones ao criar um lead
+     *
+     * @return void
      */
     protected static function boot(): void
     {
@@ -163,7 +210,11 @@ final class Lead extends BaseModel
     }
 
     /**
-     * Query base para verificar restrições de lead
+     * Cria uma query base para verificar restrições de distribuição de leads
+     *
+     * Método auxiliar utilizado para verificar restrições com base nos telefones do lead
+     *
+     * @return \Illuminate\Database\Eloquent\Builder Query base para verificação de restrições
      */
     private function checkLeadRestriction()
     {

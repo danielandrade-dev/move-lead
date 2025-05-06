@@ -11,6 +11,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+/**
+ * Modelo de Usuário do sistema
+ *
+ * Representa os usuários da aplicação com diferentes níveis de acesso
+ * e funcionalidades específicas para cada tipo de usuário.
+ */
 final class User extends Authenticatable
 {
     use HasApiTokens;
@@ -20,6 +26,8 @@ final class User extends Authenticatable
 
     /**
      * Tipos de usuário disponíveis
+     *
+     * Constantes que definem os possíveis tipos de usuário no sistema
      */
     public const TYPE_ADMIN = 'admin';
     public const TYPE_MANAGER = 'manager';
@@ -27,7 +35,7 @@ final class User extends Authenticatable
     public const TYPE_ANALYST = 'analyst';
 
     /**
-     * The attributes that are mass assignable.
+     * Atributos que são permitidos para atribuição em massa
      *
      * @var list<string>
      */
@@ -42,7 +50,7 @@ final class User extends Authenticatable
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
+     * Atributos que devem ser ocultos na serialização
      *
      * @var list<string>
      */
@@ -52,7 +60,7 @@ final class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * Atributos que devem ser convertidos para tipos nativos
      *
      * @return array<string, string>
      */
@@ -65,7 +73,9 @@ final class User extends Authenticatable
     ];
 
     /**
-     * Lista de tipos de usuário disponíveis
+     * Retorna a lista de tipos de usuário disponíveis com seus rótulos
+     *
+     * @return array<string, string> Matriz associativa com os tipos de usuário e seus respectivos nomes legíveis
      */
     public static function getTypesList(): array
     {
@@ -78,7 +88,11 @@ final class User extends Authenticatable
     }
 
     /**
-     * Relacionamento com a loja
+     * Define o relacionamento entre usuário e loja
+     *
+     * Um usuário pode estar associado a uma loja específica
+     *
+     * @return BelongsTo Relacionamento de pertencimento à loja
      */
     public function store(): BelongsTo
     {
@@ -86,7 +100,11 @@ final class User extends Authenticatable
     }
 
     /**
-     * Relacionamento com a empresa
+     * Define o relacionamento entre usuário e empresa
+     *
+     * Um usuário pode estar associado a uma empresa específica
+     *
+     * @return BelongsTo Relacionamento de pertencimento à empresa
      */
     public function company(): BelongsTo
     {
@@ -95,6 +113,8 @@ final class User extends Authenticatable
 
     /**
      * Verifica se o usuário é um administrador
+     *
+     * @return bool Verdadeiro se o usuário for um administrador, falso caso contrário
      */
     public function isAdmin(): bool
     {
@@ -103,6 +123,8 @@ final class User extends Authenticatable
 
     /**
      * Verifica se o usuário é um gerente
+     *
+     * @return bool Verdadeiro se o usuário for um gerente, falso caso contrário
      */
     public function isManager(): bool
     {
@@ -111,6 +133,8 @@ final class User extends Authenticatable
 
     /**
      * Verifica se o usuário é da loja
+     *
+     * @return bool Verdadeiro se o usuário for da loja, falso caso contrário
      */
     public function isStoreUser(): bool
     {
@@ -119,6 +143,8 @@ final class User extends Authenticatable
 
     /**
      * Verifica se o usuário é um analista
+     *
+     * @return bool Verdadeiro se o usuário for um analista, falso caso contrário
      */
     public function isAnalyst(): bool
     {
@@ -126,7 +152,10 @@ final class User extends Authenticatable
     }
 
     /**
-     * Escopo para usuários ativos
+     * Escopo para filtrar usuários ativos
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query Query do Eloquent
+     * @return \Illuminate\Database\Eloquent\Builder Query modificada
      */
     public function scopeActive($query)
     {
@@ -134,7 +163,11 @@ final class User extends Authenticatable
     }
 
     /**
-     * Escopo para usuários por tipo
+     * Escopo para filtrar usuários por tipo
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query Query do Eloquent
+     * @param string $type Tipo de usuário a ser filtrado
+     * @return \Illuminate\Database\Eloquent\Builder Query modificada
      */
     public function scopeOfType($query, string $type)
     {
@@ -142,7 +175,11 @@ final class User extends Authenticatable
     }
 
     /**
-     * Boot function from Laravel
+     * Método de inicialização do modelo
+     *
+     * Configura eventos para garantir valores padrão durante a criação
+     *
+     * @return void
      */
     protected static function boot(): void
     {

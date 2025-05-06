@@ -9,6 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * Classe abstrata base para todos os modelos da aplicação.
+ *
+ * Fornece funcionalidades comuns como soft deletes, atributos compartilhados,
+ * e configurações padrão para todos os modelos derivados.
+ */
 abstract class BaseModel extends Model
 {
     use HasCommonAttributes;
@@ -17,11 +23,15 @@ abstract class BaseModel extends Model
 
     /**
      * Indica se o model deve usar timestamps
+     *
+     * @var bool
      */
     public $timestamps = true;
 
     /**
      * Atributos que devem ser convertidos para tipos nativos
+     *
+     * @var array<string, string>
      */
     protected $casts = [
         'created_at' => 'datetime',
@@ -32,13 +42,20 @@ abstract class BaseModel extends Model
 
     /**
      * Atributos que são permitidos para atribuição em massa
+     *
+     * @var array<int, string>
      */
     protected $fillable = [
         'is_active',
     ];
 
     /**
-     * Boot function from Laravel
+     * Método de inicialização do modelo
+     *
+     * Executado automaticamente quando o modelo é inicializado.
+     * Define comportamentos padrão para todos os modelos derivados.
+     *
+     * @return void
      */
     protected static function boot(): void
     {

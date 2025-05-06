@@ -7,10 +7,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 
+/**
+ * Modelo de Campo de Segmento
+ *
+ * Representa os campos personalizados que podem ser definidos para cada segmento.
+ * Gerencia tipos de dados, validações e ordenação dos campos.
+ */
 final class SegmentField extends Model
 {
     /**
      * Tipos de campos possíveis
+     *
+     * Constantes que definem os tipos de dados suportados para campos personalizados
      */
     public const TYPE_TEXT = 'text';
     public const TYPE_NUMBER = 'number';
@@ -20,6 +28,8 @@ final class SegmentField extends Model
 
     /**
      * Atributos que são permitidos para atribuição em massa
+     *
+     * @var array<int, string>
      */
     protected $fillable = [
         'segment_id',
@@ -35,6 +45,8 @@ final class SegmentField extends Model
 
     /**
      * Atributos que devem ser convertidos para tipos nativos
+     *
+     * @var array<string, string>
      */
     protected $casts = [
         'segment_id' => 'integer',
@@ -49,7 +61,9 @@ final class SegmentField extends Model
     ];
 
     /**
-     * Lista de tipos de campos disponíveis
+     * Retorna a lista de tipos de campos disponíveis com seus rótulos
+     *
+     * @return array<string, string> Matriz associativa com os tipos de campos e seus nomes legíveis
      */
     public static function getTypesList(): array
     {
@@ -63,7 +77,11 @@ final class SegmentField extends Model
     }
 
     /**
-     * Relacionamento com o segmento
+     * Define o relacionamento com o segmento
+     *
+     * Um campo pertence a um único segmento
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo Relacionamento com o segmento
      */
     public function segment()
     {
@@ -72,6 +90,10 @@ final class SegmentField extends Model
 
     /**
      * Verifica se o campo é do tipo seleção
+     *
+     * Campos do tipo seleção requerem opções pré-definidas
+     *
+     * @return bool Verdadeiro se o campo for do tipo seleção
      */
     public function isSelectType(): bool
     {
@@ -80,6 +102,8 @@ final class SegmentField extends Model
 
     /**
      * Verifica se o campo é obrigatório
+     *
+     * @return bool Verdadeiro se o campo for obrigatório
      */
     public function isRequired(): bool
     {
@@ -87,7 +111,10 @@ final class SegmentField extends Model
     }
 
     /**
-     * Escopo para ordenar campos por ordem
+     * Escopo para ordenar campos pela ordem definida
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query Query do Eloquent
+     * @return \Illuminate\Database\Eloquent\Builder Query modificada
      */
     public function scopeOrdered($query)
     {
@@ -95,7 +122,12 @@ final class SegmentField extends Model
     }
 
     /**
-     * Boot function from Laravel
+     * Método de inicialização do modelo
+     *
+     * Configura eventos para validação de campos do tipo seleção
+     * e definição automática da ordem
+     *
+     * @return void
      */
     protected static function boot(): void
     {

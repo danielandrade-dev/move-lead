@@ -6,12 +6,21 @@ namespace App\Models;
 
 use App\Models\Traits\HasGeolocation;
 
+/**
+ * Modelo de Localização de Loja
+ *
+ * Representa os pontos de captação de uma loja.
+ * Cada loja pode ter múltiplas localizações com diferentes raios de cobertura.
+ * Possui funcionalidades para geolocalização e verificação de cobertura.
+ */
 final class StoreLocation extends BaseModel
 {
     use HasGeolocation;
 
     /**
      * Atributos que são permitidos para atribuição em massa
+     *
+     * @var array<int, string>
      */
     protected $fillable = [
         'store_id',
@@ -29,6 +38,8 @@ final class StoreLocation extends BaseModel
 
     /**
      * Atributos que devem ser convertidos para tipos nativos
+     *
+     * @var array<string, string>
      */
     protected $casts = [
         'store_id' => 'integer',
@@ -43,7 +54,11 @@ final class StoreLocation extends BaseModel
     ];
 
     /**
-     * Relacionamento com a loja
+     * Define o relacionamento com a loja
+     *
+     * Uma localização pertence a uma única loja
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo Relacionamento com a loja
      */
     public function store()
     {
@@ -51,7 +66,14 @@ final class StoreLocation extends BaseModel
     }
 
     /**
-     * Verifica se o endereço está dentro do raio de cobertura
+     * Verifica se um determinado ponto está dentro do raio de cobertura
+     *
+     * Utiliza o método getDistanceTo do trait HasGeolocation para calcular
+     * a distância entre dois pontos e compara com o raio de cobertura
+     *
+     * @param float $latitude Latitude do ponto a ser verificado
+     * @param float $longitude Longitude do ponto a ser verificado
+     * @return bool Verdadeiro se o ponto estiver dentro do raio de cobertura
      */
     public function isAddressInCoverage(float $latitude, float $longitude): bool
     {
@@ -59,7 +81,11 @@ final class StoreLocation extends BaseModel
     }
 
     /**
-     * Boot function from Laravel
+     * Método de inicialização do modelo
+     *
+     * Configura eventos para garantir que só existe uma localização principal por loja
+     *
+     * @return void
      */
     protected static function boot(): void
     {

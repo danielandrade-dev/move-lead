@@ -7,10 +7,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 
+/**
+ * Modelo de Campo Personalizado de Lead
+ *
+ * Representa os valores de campos personalizados associados a um lead.
+ * Gerencia validações, formatações e relacionamentos com SegmentField.
+ */
 final class LeadCustomField extends Model
 {
     /**
      * Atributos que são permitidos para atribuição em massa
+     *
+     * @var array<int, string>
      */
     protected $fillable = [
         'lead_id',
@@ -21,6 +29,8 @@ final class LeadCustomField extends Model
 
     /**
      * Atributos que devem ser convertidos para tipos nativos
+     *
+     * @var array<string, string>
      */
     protected $casts = [
         'lead_id' => 'integer',
@@ -33,7 +43,11 @@ final class LeadCustomField extends Model
     ];
 
     /**
-     * Relacionamento com o lead
+     * Define o relacionamento com o lead
+     *
+     * Um campo personalizado pertence a um único lead
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo Relacionamento com o lead
      */
     public function lead()
     {
@@ -41,7 +55,11 @@ final class LeadCustomField extends Model
     }
 
     /**
-     * Relacionamento com o campo do segmento
+     * Define o relacionamento com o campo do segmento
+     *
+     * Um campo personalizado é baseado em um campo de segmento
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo Relacionamento com o campo do segmento
      */
     public function segmentField()
     {
@@ -50,6 +68,10 @@ final class LeadCustomField extends Model
 
     /**
      * Retorna o valor formatado do campo baseado no tipo
+     *
+     * Converte o valor para um formato legível de acordo com o tipo do campo
+     *
+     * @return mixed Valor formatado de acordo com o tipo do campo
      */
     public function getFormattedValue()
     {
@@ -66,6 +88,11 @@ final class LeadCustomField extends Model
 
     /**
      * Valida o valor do campo de acordo com as regras do SegmentField
+     *
+     * Verifica se o valor é válido para o tipo de campo e se atende aos
+     * requisitos de obrigatoriedade
+     *
+     * @return bool Verdadeiro se o valor for válido
      */
     public function validateValue(): bool
     {
@@ -87,7 +114,11 @@ final class LeadCustomField extends Model
     }
 
     /**
-     * Boot function from Laravel
+     * Método de inicialização do modelo
+     *
+     * Configura eventos para validação automática do valor antes de salvar
+     *
+     * @return void
      */
     protected static function boot(): void
     {

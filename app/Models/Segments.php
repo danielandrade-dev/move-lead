@@ -9,12 +9,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
 use RuntimeException;
 
+/**
+ * Modelo de Segmentos
+ *
+ * Representa os diferentes segmentos de mercado para categorização de leads.
+ * Gerencia a criação automática de slugs e previne exclusão quando há leads associados.
+ */
 final class Segments extends Model
 {
     use HasFactory;
 
     /**
      * Atributos que são permitidos para atribuição em massa
+     *
+     * @var array<int, string>
      */
     protected $fillable = [
         'name',
@@ -25,6 +33,8 @@ final class Segments extends Model
 
     /**
      * Atributos que devem ser convertidos para tipos nativos
+     *
+     * @var array<string, string>
      */
     protected $casts = [
         'is_active' => 'boolean',
@@ -34,7 +44,11 @@ final class Segments extends Model
     ];
 
     /**
-     * Relacionamento com os campos do segmento
+     * Define o relacionamento com os campos personalizados do segmento
+     *
+     * Um segmento pode ter múltiplos campos personalizados associados
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany Relacionamento com os campos do segmento
      */
     public function fields()
     {
@@ -42,7 +56,11 @@ final class Segments extends Model
     }
 
     /**
-     * Relacionamento com os leads do segmento
+     * Define o relacionamento com os leads deste segmento
+     *
+     * Um segmento pode ter múltiplos leads associados
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany Relacionamento com os leads
      */
     public function leads()
     {
@@ -50,7 +68,11 @@ final class Segments extends Model
     }
 
     /**
-     * Retorna os campos ativos do segmento
+     * Retorna apenas os campos ativos deste segmento
+     *
+     * Utiliza o escopo 'active' definido no modelo SegmentField
+     *
+     * @return \Illuminate\Database\Eloquent\Builder Query com os campos ativos
      */
     public function activeFields()
     {
@@ -59,6 +81,10 @@ final class Segments extends Model
 
     /**
      * Verifica se o segmento possui leads associados
+     *
+     * Utilizado para prevenção de exclusão de segmentos em uso
+     *
+     * @return bool Verdadeiro se o segmento tiver leads associados
      */
     public function hasLeads(): bool
     {
@@ -67,6 +93,9 @@ final class Segments extends Model
 
     /**
      * Escopo para filtrar segmentos ativos
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query Query do Eloquent
+     * @return \Illuminate\Database\Eloquent\Builder Query modificada
      */
     public function scopeActive($query)
     {
@@ -75,6 +104,9 @@ final class Segments extends Model
 
     /**
      * Escopo para filtrar segmentos inativos
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query Query do Eloquent
+     * @return \Illuminate\Database\Eloquent\Builder Query modificada
      */
     public function scopeInactive($query)
     {
@@ -82,7 +114,11 @@ final class Segments extends Model
     }
 
     /**
-     * Boot function from Laravel
+     * Método de inicialização do modelo
+     *
+     * Configura eventos para geração automática de slug e validação na exclusão
+     *
+     * @return void
      */
     protected static function boot(): void
     {
